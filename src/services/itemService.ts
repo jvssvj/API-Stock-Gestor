@@ -5,9 +5,8 @@ import {
   CreateItemDTO,
   createItemSchema,
   UpdateItemDTO,
+  updateItemSchema,
 } from "../schemas/ItemSchema";
-
-export const updateItemSchema = createItemSchema.partial();
 
 const itemService = {
   findAll: async () => {
@@ -32,8 +31,8 @@ const itemService = {
     return itemRepository.create(prismaData);
   },
 
-  findById(id: string) {
-    const item = itemRepository.findById(id);
+  findById: async (id: string) => {
+    const item = await itemRepository.findById(id);
     if (!item) throw new HttpError(404, "Item não encontrado.");
     return item;
   },
@@ -44,13 +43,13 @@ const itemService = {
 
     const validatedData = updateItemSchema.parse(data);
 
-    const updatedItem = await itemRepository.update(id, validatedData);
+    return await itemRepository.update(id, validatedData);
   },
 
   delete: async (id: string) => {
-    const item = itemRepository.findById(id);
+    const item = await itemRepository.findById(id);
     if (!item) throw new HttpError(404, "Item não encontrado.");
-    await itemRepository.delete(id);
+    return await itemRepository.delete(id);
   },
 };
 

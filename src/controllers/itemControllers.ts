@@ -45,10 +45,8 @@ const itemControllers = {
 
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const deletedItem = await itemService.delete(req.params.id);
-      return res
-        .status(200)
-        .json({ message: "Item deletado com sucesso!", deletedItem });
+      await itemService.delete(req.params.id);
+      return res.status(200).json({ message: "Item deletado com sucesso!" });
     } catch (error) {
       next(error);
     }

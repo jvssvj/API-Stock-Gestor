@@ -9,11 +9,12 @@ export const errorHandlerMiddleware: ErrorRequestHandler = (
   next: NextFunction
 ) => {
   if (error instanceof ZodError) {
-    const { fieldErrors } = error.flatten();
-
     return res.status(400).json({
       status: "Validation Error",
-      errors: fieldErrors,
+      errors: error.issues.map((issue) => ({
+        field: issue.path.join("."),
+        message: issue.message,
+      })),
     });
   }
 
