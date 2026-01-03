@@ -4,7 +4,7 @@ import itemService from "../services/itemService";
 const itemControllers = {
   items: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const items = itemService.findAll();
+      const items = await itemService.findAll();
       return res.status(302).json({ items });
     } catch (error) {
       next(error);
@@ -13,7 +13,7 @@ const itemControllers = {
 
   findById: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const item = itemService.findById(req.params.id);
+      const item = await itemService.findById(req.params.id);
       return res.status(302).json({ item });
     } catch (error) {
       next(error);
@@ -22,7 +22,8 @@ const itemControllers = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const item = itemService.create(req.body);
+      const { stockId } = req.params;
+      const item = await itemService.create(req.body, stockId);
       return res
         .status(200)
         .json({ message: "Item cadastrado com sucesso!", item });
@@ -33,7 +34,7 @@ const itemControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedItem = itemService.update(req.params.id, req.body);
+      const updatedItem = await itemService.update(req.params.id, req.body);
       return res
         .status(200)
         .json({ message: "Item atualizado com sucesso!", updatedItem });
@@ -44,7 +45,7 @@ const itemControllers = {
 
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const deletedItem = itemService.delete(req.params.id);
+      const deletedItem = await itemService.delete(req.params.id);
       return res
         .status(200)
         .json({ message: "Item deletado com sucesso!", deletedItem });

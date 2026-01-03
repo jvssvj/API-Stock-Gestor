@@ -4,7 +4,7 @@ const { Router } = require("express");
 const itemRoutes = Router();
 
 itemRoutes.get("/", itemControllers.items);
-itemRoutes.post("/", itemControllers.create);
+itemRoutes.post("/stocks/:stockId/items", itemControllers.create);
 itemRoutes.get("/:id", itemControllers.findById);
 itemRoutes.put("/:id", itemControllers.update);
 itemRoutes.delete("/:id", itemControllers.delete);

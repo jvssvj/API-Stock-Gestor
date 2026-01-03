@@ -2,18 +2,16 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../database";
 
 export const itemRepository = {
-  findAll: () => prisma.item.findMany(),
+  findAll: async () => await prisma.item.findMany(),
 
-  create: (data: Prisma.ItemCreateInput) => prisma.item.create({ data }),
+  create: async (data: Prisma.ItemCreateInput) =>
+    await prisma.item.create({ data }),
 
-  findById: (id: string) => {
-    const item = prisma.item.findUnique({ where: { id } });
-    return item;
-  },
+  findById: async (id: string) =>
+    await prisma.item.findUnique({ where: { id } }),
 
-  update: (id: string, data: Prisma.ItemCreateInput) => {
-    const updatedItem = prisma.item.update({ where: { id }, data });
-  },
+  update: async (id: string, data: Prisma.ItemUpdateInput) =>
+    await prisma.item.update({ where: { id }, data }),
 
-  delete: (id: string) => prisma.item.delete({ where: { id } }),
+  delete: async (id: string) => await prisma.item.delete({ where: { id } }),
 };
