@@ -23,6 +23,7 @@
   "dependencies": {
     "@prisma/client": "^6.19.1",
     "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
     "zod": "^4.3.4"
   }
 }
