@@ -2,6 +2,7 @@ import { Prisma, User } from "@prisma/client";
 import { HttpError } from "../errors/HttpError";
 import { userRepository } from "../repositories/userRepository";
 import { createUserSchema, updateUserSchema } from "../schemas/userSchema";
+import * as bcrypt from "bcrypt";
 
 export const userService = {
   findAll: async (): Promise<User[] | []> => {
@@ -16,9 +17,11 @@ export const userService = {
 
   create: async (data: unknown) => {
     const validatedData = createUserSchema.parse(data);
+    const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
     const user: Prisma.UserCreateInput = {
       ...validatedData,
+      password: hashedPassword,
       stock: {
         create: {},
       },
