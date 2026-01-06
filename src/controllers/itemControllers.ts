@@ -4,7 +4,7 @@ import itemService from "../services/itemService";
 const itemControllers = {
   items: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const items = await itemService.findAll();
+      const items = await itemService.findAll(req.userId);
       return res.status(302).json({ items });
     } catch (error) {
       next(error);
@@ -13,7 +13,7 @@ const itemControllers = {
 
   findById: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const item = await itemService.findById(req.params.id);
+      const item = await itemService.findById(req.userId, req.params.id);
       return res.status(302).json({ item });
     } catch (error) {
       next(error);
@@ -22,8 +22,7 @@ const itemControllers = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { stockId } = req.params;
-      const item = await itemService.create(req.body, stockId);
+      const item = await itemService.create(req.userId, req.body);
       return res
         .status(200)
         .json({ message: "Item cadastrado com sucesso!", item });
@@ -34,7 +33,11 @@ const itemControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedItem = await itemService.update(req.params.id, req.body);
+      const updatedItem = await itemService.update(
+        req.userId,
+        req.params.id,
+        req.body
+      );
       return res
         .status(200)
         .json({ message: "Item atualizado com sucesso!", updatedItem });
@@ -45,7 +48,7 @@ const itemControllers = {
 
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await itemService.delete(req.params.id);
+      await itemService.delete(req.userId, req.params.id);
       return res.status(200).json({ message: "Item deletado com sucesso!" });
     } catch (error) {
       next(error);
