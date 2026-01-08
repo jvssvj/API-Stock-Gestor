@@ -11,7 +11,7 @@ export const createItemSchema = z.object({
     .number("Formato inválido. Precisa ser um número!")
     .int("O preço precisa ser maior que 1!")
     .min(1, "O preço não pode ser negativo!"),
-  category: z.string().min(1, "Categoria é obrigatória"),
+  categoryId: z.uuid().optional(),
   sku: z.string().min(1, "SKU é obrigatório"),
   image: z.string().url("Imagem deve ser uma URL").optional(),
 });

@@ -1,12 +1,6 @@
 import { HttpError } from "../errors/HttpError";
 import { itemRepository } from "../repositories/ItemRepository";
-import { Prisma } from "@prisma/client";
-import {
-  CreateItemDTO,
-  createItemSchema,
-  UpdateItemDTO,
-  updateItemSchema,
-} from "../schemas/ItemSchema";
+import { updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 
 const itemService = {
@@ -20,26 +14,29 @@ const itemService = {
     return items;
   },
 
-  create: async (userId: string, item: unknown) => {
-    const validatedData = createItemSchema.parse(item);
-
+  create: async (userId: string, itemData: any) => {
     const stock = await prisma.stock.findUnique({
       where: { userId },
     });
 
-    if (!stock)
-      throw new HttpError(404, "Estoque não encontrado para este usuário.");
+    if (!stock) throw new Error("Estoque não encontrado");
 
-    const prismaData: Prisma.ItemCreateInput = {
-      ...validatedData,
-      stock: {
-        connect: {
-          id: stock.id,
-        },
+    const category = await prisma.category.findFirst({
+      where: {
+        id: itemData.categoryId,
+        stockId: stock.id,
       },
-    };
+    });
 
-    return itemRepository.create(prismaData);
+    if (!category) {
+      throw new Error("Categoria inválida ou não pertence a este usuário");
+    }
+
+    return await itemRepository.create({
+      ...itemData,
+      stockId: stock.id,
+      categoryId: category.id,
+    });
   },
 
   findById: async (userId: string, itemId: string) => {
@@ -68,6 +65,19 @@ const itemService = {
         403,
         "Você não tem permissão para atualizar esse item!"
       );
+    }
+
+    if (validatedData.categoryId) {
+      const category = await prisma.category.findFirst({
+        where: {
+          id: validatedData.categoryId,
+          stock: { userId: userId },
+        },
+      });
+
+      if (!category) {
+        throw new HttpError(400, "Categoria inválida ou não pertence a você.");
+      }
     }
 
     return await itemRepository.update(userId, itemId, validatedData);

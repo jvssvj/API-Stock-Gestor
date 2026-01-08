@@ -22,10 +22,12 @@ const itemControllers = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const item = await itemService.create(req.userId, req.body);
+      const { userId } = req.body;
+      const { itemData } = req.body;
+      const newItem = await itemService.create(userId, itemData);
       return res
         .status(200)
-        .json({ message: "Item cadastrado com sucesso!", item });
+        .json({ message: "Item cadastrado com sucesso!", newItem });
     } catch (error) {
       next(error);
     }
@@ -33,11 +35,11 @@ const itemControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedItem = await itemService.update(
-        req.userId,
-        req.params.id,
-        req.body
-      );
+      const { userId } = req.body;
+      const { itemData } = req.body;
+      const { id } = req.params;
+
+      const updatedItem = await itemService.update(userId, id, itemData);
       return res
         .status(200)
         .json({ message: "Item atualizado com sucesso!", updatedItem });

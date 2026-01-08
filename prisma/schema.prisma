@@ -21,6 +21,19 @@ model Stock {
   userId String @unique
   items  Item[]
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories Category[]
+}
+
+model Category {
+  id String @id @default(uuid())
+  name String
+  stockId String 
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  items Item[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([name, stockId])
 }
 
 model Item {
@@ -29,11 +42,14 @@ model Item {
   description  String?
   quantity     Int
   priceInCents Int
-  category     String
   sku          String
   image        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  
   stockId      String
   stock        Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  categoryId   String
+  category     Category @relation(fields: [categoryId], references: [id])
 }

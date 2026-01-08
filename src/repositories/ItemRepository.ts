@@ -6,8 +6,25 @@ export const itemRepository = {
     return await prisma.item.findMany({ where: { stock: { userId } } });
   },
 
-  create: async (data: Prisma.ItemCreateInput) =>
-    await prisma.item.create({ data }),
+  create: async (data: {
+    name: string;
+    quantity: number;
+    priceInCents: number;
+    sku: string;
+    stockId: string;
+    categoryId: string;
+  }) => {
+    return await prisma.item.create({
+      data: {
+        name: data.name,
+        quantity: data.quantity,
+        priceInCents: data.priceInCents,
+        sku: data.sku,
+        stock: { connect: { id: data.stockId } },
+        category: { connect: { id: data.categoryId } },
+      },
+    });
+  },
 
   findById: async (itemId: string) => {
     return await prisma.item.findUnique({
@@ -16,13 +33,26 @@ export const itemRepository = {
     });
   },
 
-  update: async (userId: string, id: string, data: Prisma.ItemUpdateInput) => {
+  update: async (userId: string, id: string, data: any) => {
     return await prisma.item.update({
       where: {
         id: id,
         stock: { userId: userId },
       },
-      data,
+      data: {
+        name: data.name,
+        quantity: data.quantity,
+        priceInCents: data.priceInCents,
+        sku: data.sku,
+        description: data.description,
+        image: data.image,
+
+        ...(data.categoryId && {
+          category: {
+            connect: { id: data.categoryId },
+          },
+        }),
+      },
     });
   },
 
