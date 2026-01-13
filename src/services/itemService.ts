@@ -2,6 +2,7 @@ import { HttpError } from "../errors/HttpError";
 import { itemRepository } from "../repositories/ItemRepository";
 import { updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
+import { categoryService } from "./categoryService";
 
 const itemService = {
   findAll: async (userId: string) => {
