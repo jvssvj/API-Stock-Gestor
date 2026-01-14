@@ -18,8 +18,8 @@ export const categoryRepository = {
     });
   },
 
-  findById: async (id: string) => {
-    return await prisma.category.findUnique({ where: { id } });
+  findById: async (userId: string, id: string) => {
+    return await prisma.category.findUnique({ where: { id, stock: {userId: userId}} });
   },
 
   update: async (

@@ -2,7 +2,14 @@ import { prisma } from "../database";
 
 export const itemRepository = {
   findAll: async (userId: string) => {
-    return await prisma.item.findMany({ where: { stock: { userId } } });
+    return await prisma.item.findMany({ 
+      where: { 
+        stock: { userId } 
+      }, 
+      include: {
+        category: true
+      }
+    });
   },
 
   create: async (data: {
@@ -28,7 +35,10 @@ export const itemRepository = {
   findById: async (itemId: string) => {
     return await prisma.item.findUnique({
       where: { id: itemId },
-      include: { stock: true },
+      include: { 
+        stock: true , 
+        category: true
+      },
     });
   },
 

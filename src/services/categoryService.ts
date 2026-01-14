@@ -1,6 +1,6 @@
 import { prisma } from "../database";
 import { HttpError } from "../errors/HttpError";
-import { categoryRepository } from "../repositories/cartegoryRepository";
+import { categoryRepository } from "../repositories/categoryRepository";
 
 export const categoryService = {
   findAll: async (userId: string) => {
@@ -31,8 +31,8 @@ export const categoryService = {
     return await categoryRepository.create({ name, stockId: stock.id });
   },
 
-  findById: async (id: string) => {
-    const category = await categoryRepository.findById(id);
+  findById: async (id: string, userId: string) => {
+    const category = await categoryRepository.findById(id, userId);
 
     if (!category) {
       throw new HttpError(404, "Categoria não encontrada");
@@ -42,7 +42,7 @@ export const categoryService = {
   },
 
   update: async (userId: string, id: string, name: string) => {
-    const category = await categoryRepository.findById(id);
+    const category = await categoryRepository.findById(userId, id);
 
     if (!category) {
       throw new HttpError(404, "Categoria não encontrada.");
@@ -64,7 +64,7 @@ export const categoryService = {
   },
 
   delete: async (userId: string, id: string) => {
-    const category = await categoryRepository.findById(id);
+    const category = await categoryRepository.findById(userId, id);
 
     if (!category) {
       throw new HttpError(404, "Categoria não encontrada.");

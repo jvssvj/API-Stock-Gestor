@@ -2,7 +2,26 @@ import { HttpError } from "../errors/HttpError";
 import { itemRepository } from "../repositories/ItemRepository";
 import { updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
-import { categoryService } from "./categoryService";
+
+function formateItemResponse(item: any) {
+  const { categoryId, stockId, ...itemWithoutId } = item
+
+  if (!itemWithoutId.category) {
+    return {
+      ...itemWithoutId,
+      category: {
+        id: null,
+        name: "Sem categoria",
+        stockId: null,
+        createdAt: null,
+        updatedAt: null
+      }
+    }
+  }
+
+  return itemWithoutId
+}
+
 
 const itemService = {
   findAll: async (userId: string) => {
@@ -12,7 +31,7 @@ const itemService = {
       throw new HttpError(404, "Nenhum item em estoque.");
     }
 
-    return items;
+    return items.map(formateItemResponse);
   },
 
   create: async (userId: string, itemData: any) => {
@@ -52,7 +71,7 @@ const itemService = {
       );
     }
 
-    return item;
+    return formateItemResponse(item)
   },
 
   update: async (userId: string, itemId: string, data: unknown) => {

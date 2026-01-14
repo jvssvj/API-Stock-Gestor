@@ -23,7 +23,7 @@ export const categoryController = {
 
   findById: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const category = await categoryService.findById(req.params.id);
+      const category = await categoryService.findById(req.params.id, req.userId);
 
       return res.status(200).json({ category });
     } catch (error) {
