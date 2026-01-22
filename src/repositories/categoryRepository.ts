@@ -19,7 +19,7 @@ export const categoryRepository = {
   },
 
   findById: async (userId: string, id: string) => {
-    return await prisma.category.findUnique({ where: { id, stock: {userId: userId}} });
+    return await prisma.category.findUnique({ where: { id, stock: { userId: userId } } });
   },
 
   update: async (
