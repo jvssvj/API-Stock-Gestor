@@ -3,26 +3,6 @@ import { itemRepository } from "../repositories/ItemRepository";
 import { updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 
-function formateItemResponse(item: any) {
-  const { categoryId, stockId, ...itemWithoutId } = item
-
-  if (!itemWithoutId.category) {
-    return {
-      ...itemWithoutId,
-      category: {
-        id: null,
-        name: "Sem categoria",
-        stockId: null,
-        createdAt: null,
-        updatedAt: null
-      }
-    }
-  }
-
-  return itemWithoutId
-}
-
-
 const itemService = {
   findAll: async (userId: string) => {
     const items = await itemRepository.findAll(userId);
@@ -31,7 +11,7 @@ const itemService = {
       throw new HttpError(404, "Nenhum item em estoque.");
     }
 
-    return items.map(formateItemResponse);
+    return items
   },
 
   create: async (userId: string, itemData: any) => {
@@ -60,32 +40,34 @@ const itemService = {
   },
 
   findById: async (userId: string, itemId: string) => {
-    const item = await itemRepository.findById(itemId);
-
+    const item = await itemRepository.findById(itemId, userId);
     if (!item) throw new HttpError(404, "Item não encontrado.");
 
-    if (item.stock.userId !== userId) {
-      throw new HttpError(
-        403,
-        "Acesso negado: Este item não pertence ao seu estoque"
-      );
-    }
-
-    return formateItemResponse(item)
+    return item
   },
 
-  update: async (userId: string, itemId: string, data: unknown) => {
-    const item = await itemRepository.findById(itemId);
+  update: async (userId: string, itemId: string, data: unknown, userName: string) => {
+    const item = await itemRepository.findById(itemId, userId);
     if (!item) throw new HttpError(404, "Item não encontrado.");
 
     const validatedData = updateItemSchema.parse(data);
+    const { reason, ...updates } = validatedData as any;
 
-    if (item.stock.userId !== userId) {
-      throw new HttpError(
-        403,
-        "Você não tem permissão para atualizar esse item!"
-      );
-    }
+    const changes: any[] = [];
+    const fieldsToTrack = ['name', 'quantity', 'priceInCents', 'sku', 'categoryId'];
+
+    fieldsToTrack.forEach((field) => {
+      const oldValue = (item as any)[field];
+      const newValue = (updates as any)[field];
+
+      if (newValue !== undefined && newValue !== oldValue) {
+        changes.push({
+          field: field,
+          oldValue: String(oldValue ?? "Vazio"),
+          newValue: String(newValue)
+        });
+      }
+    });
 
     if (validatedData.categoryId) {
       const category = await prisma.category.findFirst({
@@ -94,25 +76,40 @@ const itemService = {
           stock: { userId: userId },
         },
       });
-
-      if (!category) {
-        throw new HttpError(400, "Categoria inválida ou não pertence a você.");
-      }
+      if (!category) throw new HttpError(400, "Categoria inválida.");
     }
 
-    return await itemRepository.update(userId, itemId, validatedData);
+    return await prisma.$transaction(async (tx) => {
+      const updatedItem = await tx.item.update({
+        where: { id: itemId },
+        data: updates,
+        select: {
+          id: true,
+          name: true,
+          sku: true,
+          quantity: true
+        }
+      });
+
+      if (changes.length > 0) {
+        await tx.stockMovement.create({
+          data: {
+            itemId,
+            userId,
+            userName: userName,
+            reason: reason,
+            changes: changes
+          }
+        });
+      }
+
+      return updatedItem;
+    });
   },
 
   delete: async (userId: string, itemId: string) => {
-    const item = await itemRepository.findById(itemId);
+    const item = await itemRepository.findById(itemId, userId);
     if (!item) throw new HttpError(404, "Item não encontrado.");
-
-    if (item.stock.userId !== userId) {
-      throw new HttpError(
-        403,
-        "Você não tem permissão para excluir esse item!"
-      );
-    }
 
     return await itemRepository.delete(userId, itemId);
   },

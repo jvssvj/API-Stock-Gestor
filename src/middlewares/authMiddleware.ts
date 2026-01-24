@@ -25,8 +25,8 @@ export const authMiddleware = (
   jwt.verify(token, process.env.JWT_SECRET!, (err, decoded: any) => {
     if (err) throw new HttpError(401, "Token inválido");
 
-    // Injetamos o userId na requisição para usar nos Services
     req.userId = decoded.userId;
+    req.userName = decoded.userName;
     return next();
   });
 };

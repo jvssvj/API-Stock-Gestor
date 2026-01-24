@@ -18,8 +18,16 @@ export const createItemSchema = z.object({
 
 export const updateItemSchema = createItemSchema
   .partial()
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "Atualize ao menos um campo para atualizar!",
+  .extend({
+    reason: z
+      .string()
+      .optional(),
+  })
+  .refine((data) => {
+    const { reason, ...actualData } = data;
+    return Object.keys(actualData).length > 0;
+  }, {
+    message: "Altere pelo menos um campo (nome, quantidade, etc.) para salvar as mudanças!",
   });
 
 export type UpdateItemDTO = z.infer<typeof updateItemSchema>;

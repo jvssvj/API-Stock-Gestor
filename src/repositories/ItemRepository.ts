@@ -2,13 +2,24 @@ import { prisma } from "../database";
 
 export const itemRepository = {
   findAll: async (userId: string) => {
-    return await prisma.item.findMany({ 
-      where: { 
-        stock: { userId } 
-      }, 
-      include: {
-        category: true
-      }
+    return await prisma.item.findMany({
+      where: {
+        stock: { userId }
+      },
+
+      select: {
+        id: true,
+        name: true,
+        quantity: true,
+        priceInCents: true,
+
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+      },
     });
   },
 
@@ -32,13 +43,45 @@ export const itemRepository = {
     });
   },
 
-  findById: async (itemId: string) => {
+  findById: async (itemId: string, userId: string) => {
     return await prisma.item.findUnique({
-      where: { id: itemId },
-      include: { 
-        stock: true , 
-        category: true
+      where: {
+        id: itemId,
+        stock: {
+          userId: userId
+        }
       },
+
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        quantity: true,
+        priceInCents: true,
+        sku: true,
+        createdAt: true,
+        updatedAt: true,
+
+        category: {
+          select: {
+            id: true,
+            name: true
+          }
+        },
+
+        movements: {
+          select: {
+            id: true,
+            userName: true,
+            reason: true,
+            changes: true,
+            createdAt: true
+          },
+          orderBy: {
+            createdAt: 'desc'
+          },
+        }
+      }
     });
   },
 
@@ -61,7 +104,7 @@ export const itemRepository = {
             connect: { id: data.categoryId },
           },
         }),
-      },
+      }
     });
   },
 

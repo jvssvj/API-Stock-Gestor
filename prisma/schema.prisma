@@ -52,4 +52,17 @@ model Item {
 
   category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categoryId   String?
+
+  movements StockMovement[]
+}
+
+model StockMovement {
+  id String @id @default(uuid())
+  itemId String
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId String
+  userName String
+  reason String?
+  changes Json
+  createdAt DateTime @default(now())
 }
