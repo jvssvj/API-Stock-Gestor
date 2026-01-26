@@ -8,12 +8,10 @@ export const dashboardRepository = {
     },
 
     totalQuantity: async (stockId: string) => {
-        const result = await prisma.item.aggregate({
+        return await prisma.item.aggregate({
             where: { stockId },
             _sum: { quantity: true }
         })
-
-        return result._sum.quantity || 0
     },
 
     itemsWithLowStock: async (stockId: string, limit: number) => {
@@ -41,5 +39,61 @@ export const dashboardRepository = {
                 createdAt: true
             }
         })
+    },
+
+    topMovements: async (stockId: string) => {
+        return await prisma.item.findMany({
+            where: { stockId },
+            select: {
+                id: true,
+                name: true,
+                _count: {
+                    select: { movements: true }
+                }
+            },
+            orderBy: {
+                movements: {
+                    _count: 'desc'
+                }
+            },
+            take: 5
+        })
+    },
+
+    itemsByCategory: async (stockId: string) => {
+        return await prisma.category.findMany({
+            where: {
+                items: {
+                    some: { stockId }
+                }
+            },
+            select: {
+                name: true,
+                _count: {
+                    select: {
+                        items: {
+                            where: { stockId }
+                        }
+                    }
+                }
+            },
+            take: 5
+        });
+    },
+
+    needsAttention: async (stockId: string) => {
+        return await prisma.item.findMany({
+            where: {
+                stockId,
+                OR: [
+                    { description: null },
+                    { sku: null },
+                    { image: null },
+                    { categoryId: null },
+                ]
+            },
+            orderBy: { updatedAt: 'desc' },
+        });
     }
+
 }
