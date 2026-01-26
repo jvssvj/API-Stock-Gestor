@@ -42,7 +42,7 @@ model Item {
   description  String?
   quantity     Int
   priceInCents Int
-  sku          String?
+  sku          String
   image        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -54,6 +54,8 @@ model Item {
   categoryId   String?
 
   movements StockMovement[]
+
+  @@unique([sku, stockId])
 }
 
 model StockMovement {

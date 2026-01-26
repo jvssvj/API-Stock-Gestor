@@ -20,6 +20,9 @@ export const itemRepository = {
           }
         },
       },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
   },
 
@@ -54,6 +57,7 @@ export const itemRepository = {
 
       select: {
         id: true,
+        image: true,
         name: true,
         description: true,
         quantity: true,

@@ -1,6 +1,6 @@
 import { HttpError } from "../errors/HttpError";
 import { itemRepository } from "../repositories/ItemRepository";
-import { updateItemSchema } from "../schemas/ItemSchema";
+import { createItemSchema, updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 
 const itemService = {
@@ -32,11 +32,19 @@ const itemService = {
       throw new Error("Categoria inválida ou não pertence a este usuário");
     }
 
-    return await itemRepository.create({
-      ...itemData,
+    const validatedData = createItemSchema.parse(itemData)
+
+    const savedItem = await itemRepository.create({
+      ...validatedData,
       stockId: stock.id,
       categoryId: category.id,
     });
+
+    return {
+      id: savedItem.id,
+      name: savedItem.name,
+      quantity: savedItem
+    }
   },
 
   findById: async (userId: string, itemId: string) => {
