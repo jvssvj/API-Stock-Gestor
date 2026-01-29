@@ -1,4 +1,6 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../database";
+import { CreateItemRepositoryDTO, UpdateItemRepositoryDTO } from "../schemas/ItemSchema";
 
 export const itemRepository = {
   findAll: async (userId: string) => {
@@ -26,24 +28,8 @@ export const itemRepository = {
     });
   },
 
-  create: async (data: {
-    name: string;
-    quantity: number;
-    priceInCents: number;
-    sku: string;
-    stockId: string;
-    categoryId: string;
-  }) => {
-    return await prisma.item.create({
-      data: {
-        name: data.name,
-        quantity: data.quantity,
-        priceInCents: data.priceInCents,
-        sku: data.sku,
-        stock: { connect: { id: data.stockId } },
-        category: { connect: { id: data.categoryId } },
-      },
-    });
+  create: async (data: CreateItemRepositoryDTO) => {
+    return await prisma.item.create({ data });
   },
 
   findById: async (itemId: string, userId: string) => {
@@ -57,7 +43,8 @@ export const itemRepository = {
 
       select: {
         id: true,
-        image: true,
+        imageUrl: true,
+        imagePublicId: true,
         name: true,
         description: true,
         quantity: true,
@@ -65,6 +52,7 @@ export const itemRepository = {
         sku: true,
         createdAt: true,
         updatedAt: true,
+        stockId: true,
 
         category: {
           select: {
@@ -89,33 +77,20 @@ export const itemRepository = {
     });
   },
 
-  update: async (userId: string, id: string, data: any) => {
+  update: async (ItemId: string, userId: string, data: UpdateItemRepositoryDTO) => {
     return await prisma.item.update({
       where: {
-        id: id,
+        id: ItemId,
         stock: { userId: userId },
       },
-      data: {
-        name: data.name,
-        quantity: data.quantity,
-        priceInCents: data.priceInCents,
-        sku: data.sku,
-        description: data.description,
-        image: data.image,
-
-        ...(data.categoryId && {
-          category: {
-            connect: { id: data.categoryId },
-          },
-        }),
-      }
+      data,
     });
   },
 
-  delete: async (userId: string, id: string) => {
+  delete: async (userId: string, itemId: string) => {
     return await prisma.item.delete({
       where: {
-        id: id,
+        id: itemId,
         stock: { userId: userId },
       },
     });

@@ -87,13 +87,22 @@ export const dashboardRepository = {
                 stockId,
                 OR: [
                     { description: null },
-                    { sku: null },
-                    { image: null },
+                    { description: "" },
+                    { imageUrl: null },
                     { categoryId: null },
+                    { priceInCents: 0 }
                 ]
             },
             orderBy: { updatedAt: 'desc' },
+            select: {
+                id: true,
+                name: true,
+                description: true,
+                sku: true,
+                imageUrl: true,
+                categoryId: true,
+                priceInCents: true
+            }
         });
     }
-
 }

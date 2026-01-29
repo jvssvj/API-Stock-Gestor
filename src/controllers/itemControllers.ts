@@ -5,7 +5,7 @@ const itemControllers = {
   items: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const items = await itemService.findAll(req.userId);
-      return res.status(302).json({ items });
+      return res.status(200).json({ items });
     } catch (error) {
       next(error);
     }
@@ -14,7 +14,7 @@ const itemControllers = {
   findById: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const item = await itemService.findById(req.userId, req.params.id);
-      return res.status(302).json({ item });
+      return res.status(200).json({ item });
     } catch (error) {
       next(error);
     }

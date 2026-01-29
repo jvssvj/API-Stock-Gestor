@@ -11,8 +11,6 @@ export const createUserSchema = z.object({
 export const updateUserSchema = createUserSchema
   .partial()
   .refine((data) => Object.keys(data).length > 0, {
-    message: "Atualize ao menos um campo para atualizar!",
+    message: "Modifique ao menos um campo para atualizar!",
   });
 
-export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
-export type CreateUserDTO = z.infer<typeof createUserSchema>;

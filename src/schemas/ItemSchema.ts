@@ -1,4 +1,24 @@
-import { z } from "zod";
+import { z } from "zod"
+export interface CreateItemRepositoryDTO {
+  name: string
+  quantity: number
+  priceInCents: number
+  sku: string
+  stockId: string
+  categoryId?: string
+  imageUrl?: string | null
+  imagePublicId?: string | null
+}
+export interface UpdateItemRepositoryDTO {
+  name?: string | null
+  quantity?: number | null
+  priceInCents?: number | null
+  sku?: string | null
+  description?: string | null
+  categoryId?: string | null
+  imageUrl?: string | null
+  imagePublicId?: string | null
+}
 
 export const createItemSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -13,8 +33,9 @@ export const createItemSchema = z.object({
     .min(1, "O preço não pode ser negativo!"),
   categoryId: z.uuid().optional(),
   sku: z.string("SKU é obrigatório"),
-  image: z.string().url("Imagem deve ser uma URL").optional(),
-});
+  imageUrl: z.string().optional(),
+  imagePublicUrl: z.string().optional()
+})
 
 export const updateItemSchema = createItemSchema
   .partial()
@@ -24,11 +45,8 @@ export const updateItemSchema = createItemSchema
       .optional(),
   })
   .refine((data) => {
-    const { reason, ...actualData } = data;
-    return Object.keys(actualData).length > 0;
+    const { reason, ...actualData } = data
+    return Object.keys(actualData).length > 0
   }, {
     message: "Altere pelo menos um campo (nome, quantidade, etc.) para salvar as mudanças!",
-  });
-
-export type UpdateItemDTO = z.infer<typeof updateItemSchema>;
-export type CreateItemDTO = z.infer<typeof createItemSchema>;
+  })

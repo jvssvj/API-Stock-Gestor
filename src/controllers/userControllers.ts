@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import { userService } from "../services/userService";
-import { success } from "zod";
 
 export const userControllers = {
   findAll: async (req: Request, res: Response, next: NextFunction) => {
