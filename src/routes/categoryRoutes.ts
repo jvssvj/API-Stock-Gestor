@@ -1,7 +1,7 @@
+import { Router } from "express";
 import { categoryController } from "../controllers/categoryController";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
-const { Router } = require("express");
 const categoryRoutes = Router();
 
 categoryRoutes.get("/categories", authMiddleware, categoryController.findAll);

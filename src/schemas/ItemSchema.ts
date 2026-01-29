@@ -21,20 +21,16 @@ export interface UpdateItemRepositoryDTO {
 }
 
 export const createItemSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  description: z.string().optional(),
-  quantity: z
+  name: z.coerce.string("O nome é obrigatório"),
+  description: z.coerce.string().optional(),
+  quantity: z.coerce
     .number("Formato inválido. Precisa ser um número!")
-    .int("A quantidade precisa ser maior que 1!")
     .min(0, "Quantidade não pode ser negativa"),
-  priceInCents: z
+  priceInCents: z.coerce
     .number("Formato inválido. Precisa ser um número!")
-    .int("O preço precisa ser maior que 1!")
     .min(1, "O preço não pode ser negativo!"),
   categoryId: z.uuid().optional(),
-  sku: z.string("SKU é obrigatório"),
-  imageUrl: z.string().optional(),
-  imagePublicUrl: z.string().optional()
+  sku: z.coerce.string("SKU é obrigatório"),
 })
 
 export const updateItemSchema = createItemSchema
@@ -44,9 +40,5 @@ export const updateItemSchema = createItemSchema
       .string()
       .optional(),
   })
-  .refine((data) => {
-    const { reason, ...actualData } = data
-    return Object.keys(actualData).length > 0
-  }, {
-    message: "Altere pelo menos um campo (nome, quantidade, etc.) para salvar as mudanças!",
-  })
+
+export type CreateItemInput = z.infer<typeof createItemSchema>

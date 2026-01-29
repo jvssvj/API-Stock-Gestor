@@ -1,15 +1,15 @@
-import itemRoutes from "./routes/itemRoutes";
-import { errorHandlerMiddleware } from "./middlewares/errorHandler";
+import express from 'express'
+import cors from "cors";
+import authRoutes from './routes/authRoutes';
 import userRoutes from "./routes/userRoutes";
-import { authRoutes } from "./routes/authRoutes";
+import itemRoutes from "./routes/itemRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
-// import cors from "cors";
+import errorHandlerMiddleware from "./middlewares/errorHandler";
 
-const express = require("express");
 const app = express();
 
-// app.use(cors());
+app.use(cors());
 app.use(express.json());
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
