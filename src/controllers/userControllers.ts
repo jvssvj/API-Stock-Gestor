@@ -34,7 +34,7 @@ export const userControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedUser = await userService.update(req.params.id, req.body);
+      const updatedUser = await userService.update(req.params.id, req.body, req.file);
 
       return res
         .status(201)

@@ -42,3 +42,4 @@ export const updateItemSchema = createItemSchema
   })
 
 export type CreateItemInput = z.infer<typeof createItemSchema>
+export type UpdateItemInput = z.infer<typeof updateItemSchema>;

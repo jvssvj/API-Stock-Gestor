@@ -1,8 +1,10 @@
 import { Prisma, User } from "@prisma/client";
 import { HttpError } from "../errors/HttpError";
 import { userRepository } from "../repositories/userRepository";
-import { createUserSchema, updateUserSchema } from "../schemas/userSchema";
+import { CreateUserInput, createUserSchema, updateUserSchema } from "../schemas/userSchema";
 import * as bcrypt from "bcrypt";
+import { UpdateItemInput } from "../schemas/ItemSchema";
+import { cloudinaryService } from "./cloudinaryService";
 
 export const userService = {
   findAll: async (): Promise<User[] | []> => {
@@ -15,7 +17,7 @@ export const userService = {
     return users;
   },
 
-  create: async (data: unknown) => {
+  create: async (data: CreateUserInput) => {
     const validatedData = createUserSchema.parse(data);
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
@@ -36,17 +38,42 @@ export const userService = {
     return user;
   },
 
-  update: async (id: string, data: unknown) => {
+  update: async (id: string, userData: UpdateItemInput, file?: Express.Multer.File) => {
     const user = await userRepository.findById(id);
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!");
 
-    const validatedData = updateUserSchema.parse(data);
-    return await userRepository.update(id, validatedData);
+    const validatedData = updateUserSchema.parse(userData);
+
+    let avatarUrl = user.avatarUrl
+    let avatarPublicId = user.avatarPublicId;
+
+    if (file) {
+      if (user.avatarPublicId) {
+        await cloudinaryService.delete(user.avatarPublicId);
+      }
+      const folder = `stock-gestor/user/${user.id}/avatar`;
+      const uploadResult = await cloudinaryService.upload(file.buffer, folder) as any;
+      avatarUrl = uploadResult.url;
+      avatarPublicId = uploadResult.publicId;
+    }
+
+    const data = {
+      ...validatedData,
+      avatarUrl,
+      avatarPublicId
+    }
+
+    return await userRepository.update(id, data);
   },
 
   delete: async (id: string) => {
     const user = await userRepository.findById(id);
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!");
+
+    if (user.avatarPublicId) {
+      await cloudinaryService.delete(user.avatarPublicId)
+    }
+
     return await userRepository.delete(id);
   },
 };

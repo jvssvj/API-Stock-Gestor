@@ -1,6 +1,6 @@
 import { HttpError } from "../errors/HttpError";
 import { itemRepository } from "../repositories/ItemRepository";
-import { CreateItemInput, createItemSchema, updateItemSchema } from "../schemas/ItemSchema";
+import { CreateItemInput, createItemSchema, UpdateItemInput, updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 import { cloudinaryService } from "./cloudinaryService";
 
@@ -65,7 +65,7 @@ const itemService = {
     return item
   },
 
-  update: async (userId: string, itemId: string, data: any, userName: string, file?: Express.Multer.File) => {
+  update: async (userId: string, itemId: string, data: UpdateItemInput, userName: string, file?: Express.Multer.File) => {
     const item = await itemRepository.findById(itemId, userId);
     if (!item) throw new HttpError(404, "Item não encontrado.");
 
