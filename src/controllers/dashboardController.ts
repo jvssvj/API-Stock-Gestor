@@ -7,7 +7,7 @@ export const dashboardController = {
             const stats = await dashboardService.getStats(req.userId)
             return res.status(200).json({ stats })
         } catch (error) {
-            next()
+            next(error)
         }
     }
 }

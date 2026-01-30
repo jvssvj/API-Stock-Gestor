@@ -23,15 +23,28 @@ const errorHandlerMiddleware: ErrorRequestHandler = (
     return res.status(error.status).json({ error: error.message });
   }
 
-  if (error instanceof Error) {
-    return res.status(500).json({ error: error.message });
-  }
-
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ error: "O arquivo é muito grande! O limite é de 2MB." });
     }
     return res.status(400).json({ error: `Erro no upload: ${error.message}` });
+  }
+
+  if (error.code === "P2002") {
+    const translations: Record<string, string> = {
+      sku: "SKU",
+      email: "E-mail",
+      phone: "Telefone"
+    };
+
+    const fields = error.meta?.target as string[] || [];
+    const filteredFields = fields.filter(field => field !== 'stockId');
+    const target = filteredFields.map(f => translations[f] || f).join(", ");
+
+    return res.status(409).json({ message: `Já existe um registro com este ${target} no seu estoque.`, });
+  }
+  if (error instanceof Error) {
+    return res.status(500).json({ error: error.message });
   }
 
   return res.status(500).json({ error: "Internal server error." });

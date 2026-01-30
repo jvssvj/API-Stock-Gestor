@@ -1,36 +1,16 @@
 import { z } from "zod"
-export interface CreateItemRepositoryDTO {
-  name: string
-  quantity: number
-  priceInCents: number
-  sku: string
-  stockId: string
-  categoryId?: string
-  imageUrl?: string | null
-  imagePublicId?: string | null
-}
-export interface UpdateItemRepositoryDTO {
-  name?: string | null
-  quantity?: number | null
-  priceInCents?: number | null
-  sku?: string | null
-  description?: string | null
-  categoryId?: string | null
-  imageUrl?: string | null
-  imagePublicId?: string | null
-}
 
 export const createItemSchema = z.object({
-  name: z.coerce.string("O nome é obrigatório"),
-  description: z.coerce.string().optional(),
+  name: z.string().min(1, "O nome é obrigatório"),
+  description: z.string().optional(),
   quantity: z.coerce
     .number("Formato inválido. Precisa ser um número!")
     .min(0, "Quantidade não pode ser negativa"),
   priceInCents: z.coerce
     .number("Formato inválido. Precisa ser um número!")
     .min(1, "O preço não pode ser negativo!"),
-  categoryId: z.uuid().optional(),
-  sku: z.coerce.string("SKU é obrigatório"),
+  categoryId: z.string(),
+  sku: z.string("SKU é obrigatório").trim().min(1, "SKU é obrigatório"),
 })
 
 export const updateItemSchema = createItemSchema

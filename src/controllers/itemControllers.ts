@@ -23,7 +23,7 @@ const itemControllers = {
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const newItem = await itemService.create(req.userId, req.body, req.file);
-      return res.status(200).json({ message: "Item cadastrado com sucesso!", newItem });
+      return res.status(201).json({ message: "Item cadastrado com sucesso!", newItem });
     } catch (error) {
       next(error);
     }

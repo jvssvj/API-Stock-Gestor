@@ -1,11 +1,12 @@
 import express from 'express'
+import "express-async-errors";
 import cors from "cors";
 import authRoutes from './routes/authRoutes';
 import userRoutes from "./routes/userRoutes";
 import itemRoutes from "./routes/itemRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
-import errorHandlerMiddleware from "./middlewares/errorHandler";
+import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware";
 
 const app = express();
 

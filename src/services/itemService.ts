@@ -3,6 +3,7 @@ import { itemRepository } from "../repositories/ItemRepository";
 import { CreateItemInput, createItemSchema, UpdateItemInput, updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 import { cloudinaryService } from "./cloudinaryService";
+import { Prisma } from "@prisma/client";
 
 const itemService = {
   findAll: async (userId: string) => {
@@ -22,39 +23,48 @@ const itemService = {
     if (!stock) throw new HttpError(404, "Estoque não encontrado");
 
     const validatedData = createItemSchema.parse(itemData);
+    const { categoryId, ...rest } = validatedData;
 
-    if (validatedData.categoryId) {
+    if (categoryId) {
       const category = await prisma.category.findFirst({
         where: {
-          id: validatedData.categoryId,
+          id: categoryId,
           stockId: stock.id,
         },
       });
-      if (!category) throw new HttpError(404, "Categoria inválida ou não pertence a este usuário");
+      if (!category) {
+        throw new HttpError(404, "Categoria inválida ou não pertence a este usuário");
+      }
     }
 
-    let imageUrl = null;
-    let imagePublicId = null;
+    let imageUrl: string | null = null;
+    let imagePublicId: string | null = null;
 
     if (file) {
       const folder = `stock-gestor/stocks/${stock.id}/items`;
-      const uploadResult = await cloudinaryService.upload(file.buffer, folder) as { url: string, publicId: string };
+      const uploadResult = await cloudinaryService.upload(file.buffer, folder) as {
+        url: string;
+        publicId: string;
+      };
       imageUrl = uploadResult.url;
       imagePublicId = uploadResult.publicId;
     }
 
-    const savedItem = await itemRepository.create({
-      ...validatedData,
-      stockId: stock.id,
+    const data: Prisma.ItemCreateInput = {
+      ...rest,
+      stock: { connect: { id: stock.id } },
+      ...(categoryId && { category: { connect: { id: categoryId } } }),
       imageUrl,
       imagePublicId,
-    });
+    };
+
+    const savedItem = await itemRepository.create(data);
 
     return {
       id: savedItem.id,
       name: savedItem.name,
-      namesku: savedItem.sku,
-      quantity: savedItem.quantity
+      sku: savedItem.sku,
+      quantity: savedItem.quantity,
     };
   },
 
@@ -70,7 +80,7 @@ const itemService = {
     if (!item) throw new HttpError(404, "Item não encontrado.");
 
     const validatedData = updateItemSchema.parse(data);
-    const { reason, ...updates } = validatedData as any;
+    const { reason, categoryId, ...updates } = validatedData;
 
     let imageUrl = item.imageUrl;
     let imagePublicId = item.imagePublicId;
@@ -105,9 +115,9 @@ const itemService = {
       changes.push({ field: 'image', oldValue: item.imageUrl ? 'Sim' : 'Não', newValue: 'Sim' });
     }
 
-    if (updates.categoryId) {
+    if (validatedData.categoryId) {
       const category = await prisma.category.findFirst({
-        where: { id: updates.categoryId, stock: { userId } },
+        where: { id: validatedData.categoryId, stock: { userId } },
       });
       if (!category) throw new HttpError(400, "Categoria inválida.");
     }
@@ -117,6 +127,9 @@ const itemService = {
         where: { id: itemId },
         data: {
           ...updates,
+          ...(categoryId && {
+            category: { connect: { id: categoryId } }
+          }),
           imageUrl,
           imagePublicId,
         }

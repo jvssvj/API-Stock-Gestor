@@ -1,6 +1,5 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../database";
-import { CreateItemRepositoryDTO, UpdateItemRepositoryDTO } from "../schemas/ItemSchema";
 
 export const itemRepository = {
   findAll: async (userId: string) => {
@@ -14,6 +13,8 @@ export const itemRepository = {
         name: true,
         quantity: true,
         priceInCents: true,
+        sku: true,
+        description: true,
 
         category: {
           select: {
@@ -28,7 +29,7 @@ export const itemRepository = {
     });
   },
 
-  create: async (data: CreateItemRepositoryDTO) => {
+  create: async (data: Prisma.ItemCreateInput) => {
     return await prisma.item.create({ data });
   },
 
@@ -77,14 +78,8 @@ export const itemRepository = {
     });
   },
 
-  update: async (ItemId: string, userId: string, data: UpdateItemRepositoryDTO) => {
-    return await prisma.item.update({
-      where: {
-        id: ItemId,
-        stock: { userId: userId },
-      },
-      data,
-    });
+  update: async (ItemId: string, userId: string, data: Prisma.ItemUpdateInput) => {
+    return await prisma.item.update({ where: { id: ItemId, }, data, });
   },
 
   delete: async (userId: string, itemId: string) => {
