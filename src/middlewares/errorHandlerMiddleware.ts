@@ -41,7 +41,7 @@ const errorHandlerMiddleware: ErrorRequestHandler = (
     const filteredFields = fields.filter(field => field !== 'stockId');
     const target = filteredFields.map(f => translations[f] || f).join(", ");
 
-    return res.status(409).json({ message: `Já existe um registro com este ${target} no seu estoque.`, });
+    return res.status(409).json({ message: `Já existe um registro com este ${target}.`, });
   }
   if (error instanceof Error) {
     return res.status(500).json({ error: error.message });

@@ -10,7 +10,7 @@ export const userRepository = {
     return prisma.user.create({ data });
   },
 
-  findById: async (id: string) => {
+  findById: async (id: string): Promise<User | null> => {
     return prisma.user.findUnique({
       where: { id },
       include: { stock: true },
