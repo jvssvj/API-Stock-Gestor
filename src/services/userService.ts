@@ -43,7 +43,6 @@ export const userService = {
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!");
 
     const validatedData = updateUserSchema.parse(userData);
-
     let avatarUrl = user.avatarUrl
     let avatarPublicId = user.avatarPublicId;
 
@@ -57,11 +56,15 @@ export const userService = {
       avatarPublicId = uploadResult.publicId;
     }
 
-    const data = {
-      ...validatedData,
+    const data: Prisma.UserUpdateInput = {
       avatarUrl,
-      avatarPublicId
-    }
+      avatarPublicId,
+      ...Object.fromEntries(
+        Object.entries(validatedData).filter(([_, v]) => v !== undefined)
+      ),
+    };
+
+    delete (data as any).removePhone;
 
     return await userRepository.update(id, data);
   },
