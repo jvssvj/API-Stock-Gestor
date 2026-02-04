@@ -2,18 +2,15 @@ import { prisma } from "../database";
 import { dashboardRepository } from "../repositories/dashboardRepository";
 
 export const dashboardService = {
-    getStats: async (userId: string) => {
-        const stock = await prisma.stock.findUnique({ where: { userId } })
-        if (!stock) throw new Error("Estoque não encontrado");
-
+    getStats: async (stockId: string) => {
         const [totalDifferent, totalQty, lowStock, recentItems, topMovementsRaw, itemsByCategoryRaw, needsAttentionRaw] = await Promise.all([
-            dashboardRepository.totalDifferentItems(stock.id),
-            dashboardRepository.totalQuantity(stock.id),
-            dashboardRepository.itemsWithLowStock(stock.id, 10),
-            dashboardRepository.recentItems(stock.id, 10),
-            dashboardRepository.topMovements(stock.id),
-            dashboardRepository.itemsByCategory(stock.id),
-            dashboardRepository.needsAttention(stock.id),
+            dashboardRepository.totalDifferentItems(stockId),
+            dashboardRepository.totalQuantity(stockId),
+            dashboardRepository.itemsWithLowStock(stockId, 10),
+            dashboardRepository.recentItems(stockId, 10),
+            dashboardRepository.topMovements(stockId),
+            dashboardRepository.itemsByCategory(stockId),
+            dashboardRepository.needsAttention(stockId),
         ]);
 
         const topMovements = topMovementsRaw.map(item => ({
