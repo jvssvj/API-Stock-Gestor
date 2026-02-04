@@ -4,7 +4,7 @@ import { categoryService } from "../services/categoryService";
 export const categoryController = {
   findAll: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const categories = await categoryService.findAll(req.userId);
+      const categories = await categoryService.findAll(req.stockId);
       return res.status(200).json({ categories });
     } catch (error) {
       next(error);
@@ -13,8 +13,7 @@ export const categoryController = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { name } = req.body;
-      const category = await categoryService.create(req.userId, name);
+      const category = await categoryService.create(req.stockId, req.body);
       return res.status(201).json({ success: "Categoria cadastrada!", category });
     } catch (error) {
       next(error);
@@ -23,7 +22,8 @@ export const categoryController = {
 
   findById: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const category = await categoryService.findById(req.params.id, req.userId);
+
+      const category = await categoryService.findById(req.stockId, req.params.id);
 
       return res.status(200).json({ category });
     } catch (error) {
@@ -33,7 +33,7 @@ export const categoryController = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedCategory = await categoryService.update(req.userId, req.params.id, req.body.name);
+      const updatedCategory = await categoryService.update(req.stockId, req.params.id, req.body);
       return res.status(200).json({ updatedCategory });
     } catch (error) {
       next(error);
@@ -42,7 +42,7 @@ export const categoryController = {
 
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await categoryService.delete(req.userId, req.params.id);
+      await categoryService.delete(req.stockId, req.params.id);
       return res.status(200).json({ success: "Categoria deletada com sucesso." });
     } catch (error) {
       next(error);

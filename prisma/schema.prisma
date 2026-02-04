@@ -30,13 +30,16 @@ model Stock {
 model Category {
   id String @id @default(uuid())
   name String
+  iconName String
+  color String
+
   stockId String 
   stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
   items Item[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  @@unique([name, stockId])
+  @@unique([name, color, stockId])
 }
 
 model Item {

@@ -1,10 +1,10 @@
-import { prisma } from "../database";
 import { HttpError } from "../errors/HttpError";
 import { categoryRepository } from "../repositories/categoryRepository";
+import { createCategorySchema, CreateCategoryInput, UpdateCategoryInput, updateCategorySchema } from "../schemas/categorySchema";
 
 export const categoryService = {
-  findAll: async (userId: string) => {
-    const categories = await categoryRepository.findAll(userId);
+  findAll: async (stockId: string) => {
+    const categories = await categoryRepository.findAll(stockId);
 
     if (categories.length === 0 || !categories) {
       throw new HttpError(404, "Nenhuma categoria encontrada!");
@@ -13,26 +13,25 @@ export const categoryService = {
     return categories;
   },
 
-  create: async (userId: string, name: string) => {
-    const stock = await prisma.stock.findUnique({ where: { userId } });
+  create: async (stockId: string, data: CreateCategoryInput) => {
+    const validateData = createCategorySchema.parse(data);
 
-    if (!stock) {
-      throw new HttpError(404, "Estoque não encontrado para este usuário.");
+    const conflict = await categoryRepository.findDuplicate(stockId, null, validateData)
+
+    if (conflict) {
+      if (conflict.name.toLowerCase() === validateData.name.toLowerCase()) {
+        throw new HttpError(400, "Você já tem uma categoria com esse nome.");
+      }
+      if (conflict.color.toLowerCase() === validateData.color.toLowerCase()) {
+        throw new HttpError(400, "Você já escolheu essa cor para outra categoria.");
+      }
     }
 
-    const existingCategory = await prisma.category.findFirst({
-      where: { name: { equals: name, mode: "insensitive" }, stockId: stock.id },
-    });
-
-    if (existingCategory) {
-      throw new HttpError(400, "Você já tem uma categoria com esse nome.");
-    }
-
-    return await categoryRepository.create({ name, stockId: stock.id });
+    return await categoryRepository.create(stockId, validateData);
   },
 
-  findById: async (id: string, userId: string) => {
-    const category = await categoryRepository.findById(id, userId);
+  findById: async (stockId: string, categoryId: string,) => {
+    const category = await categoryRepository.findById(stockId, categoryId);
 
     if (!category) {
       throw new HttpError(404, "Categoria não encontrada");
@@ -41,35 +40,33 @@ export const categoryService = {
     return category;
   },
 
-  update: async (userId: string, id: string, name: string) => {
-    const category = await categoryRepository.findById(userId, id);
+  update: async (stockId: string, categoryId: string, data: UpdateCategoryInput) => {
+    const category = await categoryRepository.findById(stockId, categoryId);
+    if (!category) throw new HttpError(404, "Categoria não encontrada.");
 
-    if (!category) {
-      throw new HttpError(404, "Categoria não encontrada.");
+    const validateData = updateCategorySchema.parse(data);
+
+    const conflict = await categoryRepository.findDuplicate(category.stockId, categoryId, validateData);
+
+    if (conflict) {
+      if (validateData.name && conflict.name.toLowerCase() === validateData.name.toLowerCase()) {
+        throw new HttpError(400, "Você já tem uma categoria com esse nome.");
+      }
+      if (validateData.color && conflict.color.toLowerCase() === validateData.color.toLowerCase()) {
+        throw new HttpError(400, "Você já escolheu essa cor para outra categoria.");
+      }
     }
 
-    const nameExits = await prisma.category.findFirst({
-      where: {
-        name: { equals: name, mode: "insensitive" },
-        stockId: category.stockId,
-        NOT: { id: id },
-      },
-    });
-
-    if (nameExits) {
-      throw new HttpError(400, "Já existe outra categoria com esse nome.");
-    }
-
-    return await categoryRepository.update(userId, id, { name });
+    return await categoryRepository.update(categoryId, validateData);
   },
 
-  delete: async (userId: string, id: string) => {
-    const category = await categoryRepository.findById(userId, id);
+  delete: async (stockId: string, categoryId: string) => {
+    const category = await categoryRepository.findById(stockId, categoryId);
 
     if (!category) {
       throw new HttpError(404, "Categoria não encontrada.");
     }
 
-    return await categoryRepository.delete(userId, id);
+    return await categoryRepository.delete(categoryId);
   },
 };

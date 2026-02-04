@@ -10,6 +10,7 @@ export const authService = {
 
     const user = await prisma.user.findUnique({
       where: { email },
+      include: { stock: true }
     });
 
     if (!user) {
@@ -23,14 +24,15 @@ export const authService = {
     }
 
     const secret = process.env.JWT_SECRET!;
-    const token = jwt.sign({ userId: user.id, userName: user.name }, secret, { expiresIn: "1d" });
+    const token = jwt.sign({ userId: user.id, userName: user.name, stockId: user.stock?.id }, secret, { expiresIn: "1d" });
 
     return {
       token,
       user: {
-        id: user.id,
+        userId: user.id,
         name: user.name,
         email: user.email,
+        stockId: user.stock?.id
       },
     };
   },
