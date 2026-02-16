@@ -13,17 +13,17 @@ export const dashboardService = {
             dashboardRepository.needsAttention(stockId),
         ]);
 
-        const topMovements = topMovementsRaw.map(item => ({
+        const topMovements = topMovementsRaw.map((item: any) => ({
             label: item.name,
             value: item._count.movements
         }))
 
-        const itemsByCategory = itemsByCategoryRaw.map(cat => ({
+        const itemsByCategory = itemsByCategoryRaw.map((cat: any) => ({
             label: cat.name,
             value: cat._count.items
         }));
 
-        const needsAttention = needsAttentionRaw.map(item => {
+        const needsAttention = needsAttentionRaw.map((item: any) => {
             const blacklist = ['id', 'stockId', 'createdAt', 'updatedAt', 'imagePublicId'];
             const allFields = Object.keys(item);
 

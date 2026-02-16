@@ -1,7 +1,8 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../database";
 
 export const stockMovementRepository = {
-    create: async (data: any, tx = prisma) => {
+    create: async (data: any, tx: Prisma.TransactionClient) => {
         return await tx.stockMovement.create({ data });
     },
 
