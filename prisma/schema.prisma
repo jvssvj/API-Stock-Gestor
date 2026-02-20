@@ -1,16 +1,17 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id       String  @id @default(uuid())
+  id String @id @default(uuid())
 
-  avatarUrl   String?
-  avatarPublicId String?  
+  avatarUrl      String?
+  avatarPublicId String?
 
   name     String
   email    String  @unique
@@ -20,47 +21,48 @@ model User {
 }
 
 model Stock {
-  id     String @id @default(uuid())
-  userId String @unique
-  items  Item[]
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String     @id @default(uuid())
+  userId     String     @unique
+  items      Item[]
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   categories Category[]
 }
 
 model Category {
-  id String @id @default(uuid())
-  name String
+  id       String @id @default(uuid())
+  name     String
   iconName String
-  color String
+  color    String
 
-  stockId String 
-  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
-  items Item[]
+  stockId String
+  stock   Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  items   Item[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
   @@unique([name, color, stockId])
 }
 
 model Item {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   name         String
   description  String?
   quantity     Int
   priceInCents Int
   sku          String
 
-  imageUrl        String?
-  imagePublicId   String?
+  imageUrl      String?
+  imagePublicId String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  
-  stockId      String
-  stock        Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  category     Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  categoryId   String?
+  stockId String
+  stock   Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId String?
 
   movements StockMovement[]
 
@@ -68,12 +70,12 @@ model Item {
 }
 
 model StockMovement {
-  id String @id @default(uuid())
-  itemId String
-  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  userId String
-  userName String
-  reason String
-  changes Json
+  id        String   @id @default(uuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  userName  String
+  reason    String
+  changes   Json
   createdAt DateTime @default(now())
 }

@@ -1,13 +1,11 @@
-import { Prisma, User } from "@prisma/client";
 import { HttpError } from "../errors/HttpError";
 import { userRepository } from "../repositories/userRepository";
-import { CreateUserInput, createUserSchema, updateUserSchema } from "../schemas/userSchema";
+import { CreateUserInput, createUserSchema, UpdateUserInput, updateUserSchema } from "../schemas/userSchema";
 import * as bcrypt from "bcrypt";
-import { UpdateItemInput } from "../schemas/ItemSchema";
 import { cloudinaryService } from "./cloudinaryService";
 
 export const userService = {
-  findAll: async (): Promise<User[] | []> => {
+  findAll: async () => {
     const users = await userRepository.findAll();
 
     if (users.length === 0 || !users) {
@@ -21,7 +19,7 @@ export const userService = {
     const validatedData = createUserSchema.parse(data);
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-    const user: Prisma.UserCreateInput = {
+    const user = {
       ...validatedData,
       password: hashedPassword,
       stock: {
@@ -32,13 +30,13 @@ export const userService = {
     return await userRepository.create(user);
   },
 
-  findById: async (id: string): Promise<User | null> => {
+  findById: async (id: string) => {
     const user = await userRepository.findById(id);
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!");
     return user;
   },
 
-  update: async (id: string, userData: UpdateItemInput, file?: Express.Multer.File) => {
+  update: async (id: string, userData: UpdateUserInput, file?: Express.Multer.File) => {
     const user = await userRepository.findById(id);
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!");
 
@@ -56,7 +54,7 @@ export const userService = {
       avatarPublicId = uploadResult.publicId;
     }
 
-    const data: Prisma.UserUpdateInput = {
+    const data = {
       avatarUrl,
       avatarPublicId,
       ...Object.fromEntries(

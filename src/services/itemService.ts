@@ -3,7 +3,6 @@ import { itemRepository } from "../repositories/ItemRepository";
 import { CreateItemInput, createItemSchema, UpdateItemInput, updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 import { cloudinaryService } from "./cloudinaryService";
-import { Prisma } from "@prisma/client";
 
 const itemService = {
   findAll: async (userId: string) => {
@@ -50,7 +49,7 @@ const itemService = {
       imagePublicId = uploadResult.publicId;
     }
 
-    const data: Prisma.ItemCreateInput = {
+    const data = {
       ...rest,
       stock: { connect: { id: stock.id } },
       ...(categoryId && { category: { connect: { id: categoryId } } }),
@@ -122,7 +121,7 @@ const itemService = {
       if (!category) throw new HttpError(400, "Categoria inválida.");
     }
 
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const updatedItem = await tx.item.update({
         where: { id: itemId },
         data: {
