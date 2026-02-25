@@ -30,6 +30,7 @@ export const authService = {
       token,
       user: {
         userId: user.id,
+        avatarUrl: user.avatarUrl,
         name: user.name,
         email: user.email,
         stockId: user.stock?.id
