@@ -4,69 +4,63 @@ import { createCategorySchema, CreateCategoryInput, UpdateCategoryInput, updateC
 
 export const categoryService = {
   findAll: async (stockId: string) => {
-    const categories = await categoryRepository.findAll(stockId);
-
-    if (categories.length === 0 || !categories) {
-      throw new HttpError(404, "Nenhuma categoria encontrada!");
-    }
-
-    return categories;
+    await categoryRepository.findAll(stockId)
   },
 
   create: async (stockId: string, data: CreateCategoryInput) => {
-    const validateData = createCategorySchema.parse(data);
+    const validateData = createCategorySchema.parse(data)
 
     const conflict = await categoryRepository.findDuplicate(stockId, null, validateData)
 
     if (conflict) {
       if (conflict.name.toLowerCase() === validateData.name.toLowerCase()) {
-        throw new HttpError(400, "Você já tem uma categoria com esse nome.");
+        throw new HttpError(400, "Você já tem uma categoria com esse nome.")
       }
       if (conflict.color.toLowerCase() === validateData.color.toLowerCase()) {
-        throw new HttpError(400, "Você já escolheu essa cor para outra categoria.");
+        throw new HttpError(400, "Você já escolheu essa cor para outra categoria.")
       }
     }
 
-    return await categoryRepository.create(stockId, validateData);
+    return await categoryRepository.create(stockId, validateData)
   },
 
   findById: async (stockId: string, categoryId: string,) => {
-    const category = await categoryRepository.findById(stockId, categoryId);
+    const category = await categoryRepository.findById(stockId, categoryId)
 
     if (!category) {
-      throw new HttpError(404, "Categoria não encontrada");
+      throw new HttpError(404, "Categoria não encontrada")
     }
 
-    return category;
+    return category
   },
 
   update: async (stockId: string, categoryId: string, data: UpdateCategoryInput) => {
-    const category = await categoryRepository.findById(stockId, categoryId);
-    if (!category) throw new HttpError(404, "Categoria não encontrada.");
+    const category = await categoryRepository.findById(stockId, categoryId)
+    if (!category) throw new HttpError(404, "Categoria não encontrada.")
 
-    const validateData = updateCategorySchema.parse(data);
+    const validateData = updateCategorySchema.parse(data)
 
-    const conflict = await categoryRepository.findDuplicate(category.stockId, categoryId, validateData);
+    const conflict = await categoryRepository.findDuplicate(category.stockId, categoryId, validateData)
 
     if (conflict) {
       if (validateData.name && conflict.name.toLowerCase() === validateData.name.toLowerCase()) {
-        throw new HttpError(400, "Você já tem uma categoria com esse nome.");
+        throw new HttpError(400, "Você já tem uma categoria com esse nome.")
       }
       if (validateData.color && conflict.color.toLowerCase() === validateData.color.toLowerCase()) {
-        throw new HttpError(400, "Você já escolheu essa cor para outra categoria.");
+        throw new HttpError(400, "Você já escolheu essa cor para outra categoria.")
       }
     }
 
-    return await categoryRepository.update(categoryId, validateData);
+    return await categoryRepository.update(categoryId, validateData)
   },
 
   delete: async (stockId: string, categoryId: string) => {
-    const category = await categoryRepository.findById(stockId, categoryId);
+    const category = await categoryRepository.findById(stockId, categoryId)
 
     if (!category) {
-      throw new HttpError(404, "Categoria não encontrada.");
+      throw new HttpError(404, "Categoria não encontrada.")
     }
 
-    return await categoryRepository.delete(categoryId);
+    return await categoryRepository.delete(categoryId)
   },
-};
+}

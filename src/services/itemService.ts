@@ -3,16 +3,11 @@ import { itemRepository } from "../repositories/ItemRepository";
 import { CreateItemInput, createItemSchema, UpdateItemInput, updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 import { cloudinaryService } from "./cloudinaryService";
+import { Prisma } from "@prisma/client";
 
 const itemService = {
   findAll: async (userId: string) => {
-    const items = await itemRepository.findAll(userId);
-
-    if (!items || items.length === 0) {
-      throw new HttpError(404, "Nenhum item em estoque.");
-    }
-
-    return items
+    return await itemRepository.findAll(userId);
   },
 
   create: async (userId: string, itemData: CreateItemInput, file?: Express.Multer.File) => {
@@ -41,10 +36,7 @@ const itemService = {
 
     if (file) {
       const folder = `stock-gestor/stocks/${stock.id}/items`;
-      const uploadResult = await cloudinaryService.upload(file.buffer, folder) as {
-        url: string;
-        publicId: string;
-      };
+      const uploadResult = await cloudinaryService.upload(file.buffer, folder)
       imageUrl = uploadResult.url;
       imagePublicId = uploadResult.publicId;
     }
@@ -89,7 +81,7 @@ const itemService = {
         await cloudinaryService.delete(item.imagePublicId);
       }
       const folder = `stock-gestor/stocks/${item.stockId}/items`;
-      const uploadResult = await cloudinaryService.upload(file.buffer, folder) as any;
+      const uploadResult = await cloudinaryService.upload(file.buffer, folder)
       imageUrl = uploadResult.url;
       imagePublicId = uploadResult.publicId;
     }
@@ -121,7 +113,7 @@ const itemService = {
       if (!category) throw new HttpError(400, "Categoria inválida.");
     }
 
-    return await prisma.$transaction(async (tx: any) => {
+    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const updatedItem = await tx.item.update({
         where: { id: itemId },
         data: {

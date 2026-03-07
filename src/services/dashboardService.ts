@@ -1,4 +1,3 @@
-import { prisma } from "../database";
 import { dashboardRepository } from "../repositories/dashboardRepository";
 
 export const dashboardService = {
@@ -11,7 +10,7 @@ export const dashboardService = {
             dashboardRepository.topMovements(stockId),
             dashboardRepository.itemsByCategory(stockId),
             dashboardRepository.needsAttention(stockId),
-        ]);
+        ])
 
         const topMovements = topMovementsRaw.map((item: any) => ({
             label: item.name,
@@ -21,19 +20,19 @@ export const dashboardService = {
         const itemsByCategory = itemsByCategoryRaw.map((cat: any) => ({
             label: cat.name,
             value: cat._count.items
-        }));
+        }))
 
         const needsAttention = needsAttentionRaw.map((item: any) => {
-            const blacklist = ['id', 'stockId', 'createdAt', 'updatedAt', 'imagePublicId'];
-            const allFields = Object.keys(item);
+            const blacklist = ['id', 'stockId', 'createdAt', 'updatedAt', 'imagePublicId']
+            const allFields = Object.keys(item)
 
             const missingFields = allFields.filter(key => {
-                if (blacklist.includes(key)) return false;
+                if (blacklist.includes(key)) return false
 
-                const value = item[key as keyof typeof item];
+                const value = item[key as keyof typeof item]
 
                 if (key === 'imageUrl') {
-                    return value === null || value === undefined || value === '';
+                    return value === null || value === undefined || value === ''
                 }
 
                 return (
@@ -41,15 +40,15 @@ export const dashboardService = {
                     value === undefined ||             // O campo nem foi definido
                     (typeof value === 'string' && value.trim() === '') || // Texto vazio ou só espaços
                     (key === 'priceInCents' && value === 0) // Preço está como zero (regra de negócio)
-                );
-            });
+                )
+            })
 
             return {
                 id: item.id,
                 name: item.name,
                 missingFields
-            };
-        });
+            }
+        })
 
         return {
             totalDifferentItems: totalDifferent,
@@ -60,6 +59,6 @@ export const dashboardService = {
             topMovements: topMovements,
             itemsByCategory: itemsByCategory,
             needsAttention: needsAttention
-        };
+        }
     }
-};
+}

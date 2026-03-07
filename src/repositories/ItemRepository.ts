@@ -28,11 +28,11 @@ export const itemRepository = {
       orderBy: {
         createdAt: 'desc'
       }
-    });
+    })
   },
 
   create: async (data: Prisma.ItemCreateInput) => {
-    return await prisma.item.create({ data });
+    return await prisma.item.create({ data })
   },
 
   findById: async (itemId: string, userId: string) => {
@@ -77,11 +77,11 @@ export const itemRepository = {
           },
         }
       }
-    });
+    })
   },
 
   update: async (ItemId: string, userId: string, data: Prisma.ItemUpdateInput) => {
-    return await prisma.item.update({ where: { id: ItemId, }, data, });
+    return await prisma.item.update({ where: { id: ItemId, }, data, })
   },
 
   delete: async (userId: string, itemId: string) => {
@@ -90,6 +90,6 @@ export const itemRepository = {
         id: itemId,
         stock: { userId: userId },
       },
-    });
+    })
   },
-};
+}

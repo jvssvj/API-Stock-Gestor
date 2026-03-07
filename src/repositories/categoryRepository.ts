@@ -1,6 +1,6 @@
-import { Prisma } from "@prisma/client"
-import { prisma } from "../database"
-import { CreateCategoryInput, UpdateCategoryInput } from "../schemas/categorySchema"
+import { Prisma } from "@prisma/client";
+import { prisma } from "../database";
+import { CreateCategoryInput, UpdateCategoryInput } from "../schemas/categorySchema";
 
 export const categoryRepository = {
   findAll: async (stockId: string) => {
@@ -22,7 +22,7 @@ export const categoryRepository = {
           connect: { id: stockId }
         }
       }
-    });
+    })
   },
 
   findById: async (stockId: string, categoryId: string) => {
@@ -35,17 +35,17 @@ export const categoryRepository = {
   },
 
   findDuplicate: async (stockId: string, idToIgnore: string | null, data: { name?: string, color?: string }) => {
-    const conditions: Prisma.CategoryWhereInput[] = [];
+    const conditions: Prisma.CategoryWhereInput[] = []
 
     if (data.name) {
-      conditions.push({ name: { equals: data.name, mode: 'insensitive' as Prisma.QueryMode } });
+      conditions.push({ name: { equals: data.name, mode: 'insensitive' as Prisma.QueryMode } })
     }
 
     if (data.color) {
-      conditions.push({ color: { equals: data.color, mode: 'insensitive' as Prisma.QueryMode } });
+      conditions.push({ color: { equals: data.color, mode: 'insensitive' as Prisma.QueryMode } })
     }
 
-    if (conditions.length === 0) return null;
+    if (conditions.length === 0) return null
 
     return await prisma.category.findFirst({
       where: {
@@ -53,7 +53,7 @@ export const categoryRepository = {
         ...(idToIgnore && { NOT: { id: idToIgnore } }),
         OR: conditions
       }
-    });
+    })
   },
 
   update: async (categoryId: string, data: UpdateCategoryInput) => {

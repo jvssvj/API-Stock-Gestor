@@ -1,5 +1,4 @@
 import z from "zod";
-import { prisma } from "../database";
 
 const optionalField = () =>
   z.preprocess(

@@ -1,4 +1,4 @@
-import { prisma } from "../database"
+import { prisma } from "../database";
 
 export const dashboardRepository = {
     totalDifferentItems: async (stockId: string) => {
@@ -22,7 +22,7 @@ export const dashboardRepository = {
                 name: true,
                 quantity: true,
             }
-        });
+        })
     },
 
     recentItems: async (stockId: string, take: number) => {
@@ -78,7 +78,7 @@ export const dashboardRepository = {
                 }
             },
             take: 5
-        });
+        })
     },
 
     needsAttention: async (stockId: string) => {
@@ -103,6 +103,6 @@ export const dashboardRepository = {
                 categoryId: true,
                 priceInCents: true
             }
-        });
+        })
     }
 }
