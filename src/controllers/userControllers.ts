@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { userService } from "../services/userService";
+import { createUserSchema, updateUserSchema } from "../schemas/userSchema";
 
 export const userControllers = {
   findAll: async (req: Request, res: Response, next: NextFunction) => {
@@ -13,7 +14,8 @@ export const userControllers = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const newUser = await userService.create(req.body);
+      const validatedData = await createUserSchema.parseAsync(req.body)
+      const newUser = await userService.create(validatedData);
 
       return res
         .status(201)
@@ -34,7 +36,8 @@ export const userControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedUser = await userService.update(req.params.id, req.body, req.file);
+      const validatedData = await updateUserSchema.parseAsync(req.body)
+      const updatedUser = await userService.update(req.params.id, validatedData, req.file);
 
       return res
         .status(201)

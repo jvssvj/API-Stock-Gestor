@@ -1,25 +1,39 @@
 import z from "zod";
+import { prisma } from "../database";
 
 const optionalField = () =>
   z.preprocess(
     (val) => (!val || val === "null" || val === "undefined" ? null : val),
     z.string().trim().nullable().optional()
-  );
+  )
 
 export const createUserSchema = z.object({
-  name: z.string().min(3, "O nome é obrigatório!"),
+  name: z.string("O nome é obrigatório!").min(4, "O nome precisa ter no mínimo 4 caracteres.").max(50, "O nome deve ter no máximo 50 caracteres."),
   email: z.email("Digite um email válido!").trim().min(1, "Digite um email válido!"),
-  password: z.string().min(1, "A senha é obrigatória!"),
-});
-
-export const updateUserSchema = createUserSchema
-  .partial()
-  .extend({
-    phone: optionalField()
+  password: z.string("A senha é obrigatória!").min(6, "A senha precisa de pelo menos 6 caracteres!"),
+}).superRefine(async (data, ctx) => {
+  const userExists = await prisma.user.findUnique({
+    where: { email: data.email }
   })
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "Modifique ao menos um campo para atualizar!",
-  });
+
+  if (userExists) {
+    ctx.addIssue({
+      code: 'custom',
+      message: "Este e-mail já está cadastrado.",
+      path: ["email"]
+    })
+  }
+})
+
+export const updateUserSchema = z.object({
+  name: z.string("O nome é obrigatório!").min(4, "O nome precisa ter no mínimo 4 caracteres.").max(50, "O nome deve ter no máximo 50 caracteres.").optional(),
+  email: z.email("Digite um email válido!").trim().min(1, "Digite um email válido!").optional(),
+  password: z.string("A senha é obrigatória!").min(6, "A senha precisa de pelo menos 6 caracteres!").optional(),
+  phone: z.string()
+    .regex(/^\d{10,11}$/, "O telefone deve ter 10 ou 11 dígitos numéricos")
+    .optional()
+})
+
 
 export type CreateUserInput = z.infer<typeof createUserSchema>
 export type UpdateUserInput = z.infer<typeof updateUserSchema>

@@ -20,14 +20,14 @@ const errorHandlerMiddleware: ErrorRequestHandler = (
   }
 
   if (error instanceof HttpError) {
-    return res.status(error.status).json({ error: error.message });
+    return res.status(error.status).json({ message: error.message });
   }
 
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: "O arquivo é muito grande! O limite é de 2MB." });
+      return res.status(400).json({ message: "O limite do arquivo é de 2MB." });
     }
-    return res.status(400).json({ error: `Erro no upload: ${error.message}` });
+    return res.status(400).json({ message: `Erro no upload: ${error.message}` });
   }
 
   if (error.code === "P2002") {
@@ -43,11 +43,8 @@ const errorHandlerMiddleware: ErrorRequestHandler = (
 
     return res.status(409).json({ message: `Já existe um registro com este ${target}.`, });
   }
-  if (error instanceof Error) {
-    return res.status(500).json({ error: error.message });
-  }
 
-  return res.status(500).json({ error: "Internal server error." });
+  return res.status(500).json({ message: "Internal server error." });
 };
 
 export default errorHandlerMiddleware

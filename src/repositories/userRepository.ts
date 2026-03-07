@@ -17,6 +17,18 @@ export const userRepository = {
     });
   },
 
+  findConflict: async (id: string, email?: string, phone?: string) => {
+    return await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: email || undefined },
+          { phone: phone || undefined }
+        ],
+        NOT: { id: id }
+      }
+    })
+  },
+
   update: async (id: string, data: Prisma.UserUpdateInput) => {
     return prisma.user.update({ where: { id }, data });
   },
