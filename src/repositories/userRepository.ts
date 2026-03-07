@@ -17,6 +17,12 @@ export const userRepository = {
     });
   },
 
+  findByEmail: async (email: string) => {
+    return prisma.user.findUnique({
+      where: { email }
+    })
+  },
+
   findConflict: async (id: string, email?: string, phone?: string) => {
     return await prisma.user.findFirst({
       where: {

@@ -1,26 +1,33 @@
 import { HttpError } from "../errors/HttpError";
 import { userRepository } from "../repositories/userRepository";
-import { CreateUserInput, UpdateUserInput } from "../schemas/userSchema";
+import { CreateUserInput, createUserSchema, UpdateUserInput } from "../schemas/userSchema";
 import * as bcrypt from "bcrypt";
 import { cloudinaryService } from "./cloudinaryService";
 import { ZodError } from "zod";
 
 export const userService = {
   findAll: async () => {
-    const users = await userRepository.findAll()
-
-    if (users.length === 0 || !users) {
-      throw new HttpError(404, "Nenhum usuário encontrado!")
-    }
-
-    return users
+    return await userRepository.findAll()
   },
 
   create: async (data: CreateUserInput) => {
+    const validatedData = createUserSchema.parse(data)
+
+    const emailInUse = await userRepository.findByEmail(validatedData.email)
+    if (emailInUse) {
+      throw new ZodError([
+        {
+          code: 'custom',
+          path: ['email'],
+          message: 'Este e-mail já está cadastrado.'
+        }
+      ])
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10)
 
     const user = {
-      ...data,
+      ...validatedData,
       password: hashedPassword,
       stock: {
         create: {},
