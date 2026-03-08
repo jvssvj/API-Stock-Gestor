@@ -1,32 +1,20 @@
 import { NextFunction, Request, Response } from "express";
 import { userService } from "../services/userService";
-import { createUserSchema, updateUserSchema } from "../schemas/userSchema";
 
 export const userControllers = {
-  findAll: async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const users = await userService.findAll()
-      return res.status(200).json({ users })
-    } catch (error) {
-      next(error)
-    }
-  },
-
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const newUser = await userService.create(req.body)
-      return res
-        .status(201)
-        .json({ success: "Usuário cadastrado com sucesso!", newUser })
+      return res.status(201).json({ message: "Usuário cadastrado com sucesso!", newUser })
     } catch (error) {
       next(error)
     }
   },
 
-  findById: async (req: Request, res: Response, next: NextFunction) => {
+  findMe: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await userService.findById(req.params.id)
-      return res.status(200).json({ success: "Usuário encontrado!", user })
+      const user = await userService.findMe(req.userId)
+      return res.status(200).json({ message: "Usuário encontrado!", user })
     } catch (error) {
       next(error)
     }
@@ -34,11 +22,8 @@ export const userControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const updatedUser = await userService.update(req.params.id, req.body, req.file)
-
-      return res
-        .status(200)
-        .json({ success: "Usuário atualizado com sucesso!", updatedUser })
+      const updatedUser = await userService.update(req.userId, req.body, req.file)
+      return res.status(200).json({ message: "Usuário atualizado com sucesso!", updatedUser })
     } catch (error) {
       next(error)
     }
@@ -47,7 +32,7 @@ export const userControllers = {
   delete: async (req: Request, res: Response, next: NextFunction) => {
     try {
       await userService.delete(req.params.id)
-      return res.status(200).json({ success: "Usuário deletado com sucesso!" })
+      return res.status(200).json({ message: "Usuário deletado com sucesso!" })
     } catch (error) {
       next(error)
     }

@@ -6,10 +6,6 @@ import { cloudinaryService, CloudinaryUploadResult } from "./cloudinaryService";
 import { ZodError } from "zod";
 
 export const userService = {
-  findAll: async () => {
-    return await userRepository.findAll()
-  },
-
   create: async (data: CreateUserInput) => {
     const validatedData = createUserSchema.parse(data)
 
@@ -37,18 +33,18 @@ export const userService = {
     return await userRepository.create(user)
   },
 
-  findById: async (id: string) => {
-    const user = await userRepository.findById(id)
+  findMe: async (userId: string) => {
+    const user = await userRepository.findMe(userId)
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!")
     return user
   },
 
-  update: async (id: string, userData: UpdateUserInput, file?: Express.Multer.File) => {
-    const user = await userRepository.findById(id)
+  update: async (userId: string, userData: UpdateUserInput, file?: Express.Multer.File) => {
+    const user = await userRepository.findMe(userId)
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!")
 
     if (userData.email || userData.phone) {
-      const conflict = await userRepository.findConflict(id, userData.email, userData.phone)
+      const conflict = await userRepository.findConflict(userId, userData.email, userData.phone)
       if (conflict) {
         const field = conflict.email === userData.email ? "email" : "phone"
         throw new ZodError([
@@ -84,17 +80,17 @@ export const userService = {
 
     delete (data as any).removePhone
 
-    return await userRepository.update(id, data)
+    return await userRepository.update(userId, data)
   },
 
-  delete: async (id: string) => {
-    const user = await userRepository.findById(id)
+  delete: async (userId: string) => {
+    const user = await userRepository.findMe(userId)
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!")
 
     if (user.avatarPublicId) {
       await cloudinaryService.delete(user.avatarPublicId)
     }
 
-    return await userRepository.delete(id)
+    return await userRepository.delete(userId)
   },
 }

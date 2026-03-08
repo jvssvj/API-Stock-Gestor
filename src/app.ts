@@ -1,4 +1,4 @@
-import express from 'express'
+import express from 'express';
 import "express-async-errors";
 import cors from "cors";
 import authRoutes from './routes/authRoutes';
@@ -8,15 +8,15 @@ import categoryRoutes from "./routes/categoryRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
 import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware";
 
-const app = express();
+const app = express()
 
-app.use(cors());
-app.use(express.json());
-app.use("/api", authRoutes);
-app.use("/api", userRoutes);
-app.use("/api", itemRoutes);
-app.use("/api", categoryRoutes);
-app.use("/api", dashboardRoutes);
-app.use(errorHandlerMiddleware);
+app.use(cors({ origin: process.env.ALLOWED_ORIGIN }))
+app.use(express.json())
+app.use("/api", authRoutes)
+app.use("/api", userRoutes)
+app.use("/api", itemRoutes)
+app.use("/api", categoryRoutes)
+app.use("/api", dashboardRoutes)
+app.use(errorHandlerMiddleware)
 
-export default app;
+export default app
