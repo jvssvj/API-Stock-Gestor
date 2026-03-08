@@ -2,7 +2,8 @@ import { z } from "zod"
 
 export const createItemSchema = z.object({
   name: z
-    .string("O nome é obrigatório").min(4, "O precisa de no mínimo 4 caracteres."),
+    .string("O nome é obrigatório")
+    .min(4, "O precisa de no mínimo 4 caracteres."),
   description: z
     .string()
     .optional(),
@@ -24,16 +25,29 @@ export const createItemSchema = z.object({
 export const updateItemSchema = createItemSchema
   .partial()
   .extend({
-    reason: z.string("O motivo da atualização é obrigatório."),
-  }).refine(data => {
-    const { reason, ...fields } = data
-    return Object.values(fields).some((value) => value !== undefined)
-  },
+    reason: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      const { reason, ...fields } = data;
+      return Object.values(fields).some((value) => value !== undefined);
+    },
     {
       path: ["form"],
-      message: "Informe pelo menos um campo para atualizar."
+      message: "Atualize pelo menos um campo para atualizar.",
     }
   )
+  .refine(
+    (data) => {
+      const { reason, ...fields } = data;
+      const hasFields = Object.values(fields).some((value) => value !== undefined);
+      return !hasFields || (hasFields && !!reason);
+    },
+    {
+      path: ["reason"],
+      message: "O motivo da atualização é obrigatório.",
+    }
+  );
 
 export type CreateItemInput = z.infer<typeof createItemSchema>
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;

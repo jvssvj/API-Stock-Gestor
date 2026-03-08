@@ -3,8 +3,8 @@ import { itemRepository } from "../repositories/ItemRepository";
 import { CreateItemInput, createItemSchema, UpdateItemInput, updateItemSchema } from "../schemas/ItemSchema";
 import { prisma } from "../database";
 import { cloudinaryService } from "./cloudinaryService";
+import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
-import { ZodError, ZodIssue } from "zod";
 
 const itemService = {
   findAll: async (userId: string) => {
@@ -16,7 +16,7 @@ const itemService = {
     if (!stock) throw new HttpError(404, "Estoque não encontrado")
 
     const validatedData = createItemSchema.safeParse(itemData)
-    const categoryId = itemData.categoryId;
+    const categoryId = itemData.categoryId
 
     const [category, skuInUse] = await Promise.all([
       categoryId
@@ -25,10 +25,10 @@ const itemService = {
       itemData.sku
         ? prisma.item.findFirst({ where: { sku: itemData.sku, stockId: stock.id } })
         : Promise.resolve(null),
-    ]);
+    ])
 
 
-    const issues: { code: "custom"; path: string[]; message: string }[] = [];
+    const issues: { code: "custom"; path: string[]; message: string }[] = []
 
     if (!validatedData.success) {
       issues.push(...validatedData.error.issues as any)
@@ -36,22 +36,14 @@ const itemService = {
 
 
     if (categoryId && !category) {
-      issues.push({
-        code: "custom",
-        path: ["categoryId"],
-        message: "Categoria inválida ou não pertence a este usuário.",
-      });
+      issues.push({ code: "custom", path: ["categoryId"], message: "Categoria inválida ou não pertence a este usuário." })
     }
 
     if (skuInUse) {
-      issues.push({
-        code: "custom",
-        path: ["sku"],
-        message: "Este SKU já está em uso.",
-      });
+      issues.push({ code: "custom", path: ["sku"], message: "Este SKU já está em uso." })
     }
 
-    if (issues.length > 0) throw new ZodError(issues);
+    if (issues.length > 0) throw new ZodError(issues)
 
     const { categoryId: catId, ...rest } = validatedData.data!
 
@@ -98,44 +90,75 @@ const itemService = {
     const validatedData = updateItemSchema.parse(data)
     const { reason, categoryId, ...updates } = validatedData
 
+    const fieldsToTrack = ["name", "quantity", "priceInCents", "sku"] as const;
+
+    const hasChanges =
+      fieldsToTrack.some((field) => {
+        const newValue = updates[field];
+        return newValue !== undefined && String(newValue) !== String(item[field]);
+      }) ||
+      (categoryId !== undefined && categoryId !== item.category?.id) ||
+      !!file;
+
+    if (!hasChanges) {
+      throw new ZodError([{
+        code: "custom",
+        path: ["form"],
+        message: "Atualize pelo menos um campo para atualizar.",
+      }]);
+    }
+
+    const [category, skuInUse] = await Promise.all([
+      categoryId
+        ? prisma.category.findFirst({ where: { id: categoryId, stock: { userId } } })
+        : Promise.resolve(true),
+      updates.sku && updates.sku !== item.sku
+        ? prisma.item.findFirst({ where: { sku: updates.sku, stockId: item.stockId, NOT: { id: itemId } } })
+        : Promise.resolve(null),
+    ])
+
+    const issues: { code: "custom"; path: string[]; message: string }[] = [];
+
+    if (categoryId && !category) {
+      issues.push({ code: "custom", path: ["categoryId"], message: "Categoria inválida." })
+    }
+
+    if (skuInUse) {
+      issues.push({ code: "custom", path: ["sku"], message: "Este SKU já está em uso." })
+    }
+
+    if (issues.length > 0) throw new ZodError(issues)
+
     let imageUrl = item.imageUrl
     let imagePublicId = item.imagePublicId
 
     if (file) {
-      if (item.imagePublicId) {
-        await cloudinaryService.delete(item.imagePublicId)
-      }
+      if (item.imagePublicId) await cloudinaryService.delete(item.imagePublicId)
       const folder = `stock-gestor/stocks/${item.stockId}/items`
       const uploadResult = await cloudinaryService.upload(file.buffer, folder)
       imageUrl = uploadResult.url
       imagePublicId = uploadResult.publicId
     }
 
-    const changes: any[] = []
-    const fieldsToTrack = ['name', 'quantity', 'priceInCents', 'sku', 'categoryId']
+    const changes: { field: string; oldValue: string; newValue: string }[] = []
 
     fieldsToTrack.forEach((field) => {
-      const oldValue = (item as any)[field]
-      const newValue = (updates as any)[field]
-
-      if (newValue !== undefined && String(newValue) !== String(oldValue)) {
+      const newValue = updates[field]
+      if (newValue !== undefined && String(newValue) !== String(item[field])) {
         changes.push({
           field,
-          oldValue: String(oldValue ?? "Vazio"),
-          newValue: String(newValue)
+          oldValue: String(item[field] ?? "Vazio"),
+          newValue: String(newValue),
         })
       }
     })
 
-    if (file) {
-      changes.push({ field: 'image', oldValue: item.imageUrl ? 'Sim' : 'Não', newValue: 'Sim' })
+    if (categoryId && categoryId !== item.category?.id) {
+      changes.push({ field: "categoryId", oldValue: item.category?.id ?? "Vazio", newValue: categoryId })
     }
 
-    if (validatedData.categoryId) {
-      const category = await prisma.category.findFirst({
-        where: { id: validatedData.categoryId, stock: { userId } },
-      })
-      if (!category) throw new HttpError(400, "Categoria inválida.")
+    if (file) {
+      changes.push({ field: "image", oldValue: item.imageUrl ? "Sim" : "Não", newValue: "Sim" })
     }
 
     return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -143,13 +166,11 @@ const itemService = {
         where: { id: itemId },
         data: {
           ...updates,
-          ...(categoryId && {
-            category: { connect: { id: categoryId } }
-          }),
+          ...(categoryId && { category: { connect: { id: categoryId } } }),
           imageUrl,
           imagePublicId,
-        }
-      })
+        },
+      });
 
       if (changes.length > 0) {
         await tx.stockMovement.create({
@@ -158,12 +179,12 @@ const itemService = {
             userId,
             userName,
             reason: reason || "Edição de dados",
-            changes
-          }
-        })
+            changes,
+          },
+        });
       }
 
-      return updatedItem
+      return updatedItem;
     })
   },
 
