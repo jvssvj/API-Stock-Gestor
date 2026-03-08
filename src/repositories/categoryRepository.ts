@@ -34,15 +34,11 @@ export const categoryRepository = {
     })
   },
 
-  findDuplicate: async (stockId: string, idToIgnore: string | null, data: { name?: string, color?: string }) => {
+  findDuplicate: async (stockId: string, idToIgnore: string | null, data: { name?: string }) => {
     const conditions: Prisma.CategoryWhereInput[] = []
 
     if (data.name) {
       conditions.push({ name: { equals: data.name, mode: 'insensitive' as Prisma.QueryMode } })
-    }
-
-    if (data.color) {
-      conditions.push({ color: { equals: data.color, mode: 'insensitive' as Prisma.QueryMode } })
     }
 
     if (conditions.length === 0) return null

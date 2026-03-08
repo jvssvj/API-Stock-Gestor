@@ -10,6 +10,7 @@ export const updateCategorySchema = createCategorySchema.partial().refine(data =
     const keys = Object.keys(data)
     return keys.length > 0
 }, {
+    path: ["form"],
     message: "Altere ao menos um campo para enviar!"
 })
 
