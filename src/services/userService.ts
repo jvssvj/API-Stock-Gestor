@@ -13,7 +13,7 @@ export const userService = {
   create: async (data: CreateUserInput) => {
     const validatedData = createUserSchema.parse(data)
 
-    const emailInUse = await userRepository.findByEmail(validatedData.email)
+    const emailInUse = await userRepository.findByEmail(data.email)
     if (emailInUse) {
       throw new ZodError([
         {

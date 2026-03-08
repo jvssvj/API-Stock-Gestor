@@ -1,11 +1,5 @@
 import z from "zod";
 
-const optionalField = () =>
-  z.preprocess(
-    (val) => (!val || val === "null" || val === "undefined" ? null : val),
-    z.string().trim().nullable().optional()
-  )
-
 export const createUserSchema = z.object({
   name: z.string("O nome é obrigatório!")
     .min(4, "O nome precisa ter no mínimo 4 caracteres.")

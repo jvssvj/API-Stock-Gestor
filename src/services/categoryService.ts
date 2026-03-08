@@ -4,7 +4,7 @@ import { createCategorySchema, CreateCategoryInput, UpdateCategoryInput, updateC
 
 export const categoryService = {
   findAll: async (stockId: string) => {
-    await categoryRepository.findAll(stockId)
+    return await categoryRepository.findAll(stockId)
   },
 
   create: async (stockId: string, data: CreateCategoryInput) => {

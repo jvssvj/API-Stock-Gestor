@@ -4,41 +4,66 @@ import { CreateItemInput, createItemSchema, UpdateItemInput, updateItemSchema } 
 import { prisma } from "../database";
 import { cloudinaryService } from "./cloudinaryService";
 import { Prisma } from "@prisma/client";
+import { ZodError, ZodIssue } from "zod";
 
 const itemService = {
   findAll: async (userId: string) => {
-    return await itemRepository.findAll(userId);
+    return await itemRepository.findAll(userId)
   },
 
   create: async (userId: string, itemData: CreateItemInput, file?: Express.Multer.File) => {
-    const stock = await prisma.stock.findUnique({
-      where: { userId },
-    });
-    if (!stock) throw new HttpError(404, "Estoque não encontrado");
+    const stock = await prisma.stock.findUnique({ where: { userId } })
+    if (!stock) throw new HttpError(404, "Estoque não encontrado")
 
-    const validatedData = createItemSchema.parse(itemData);
-    const { categoryId, ...rest } = validatedData;
+    const validatedData = createItemSchema.safeParse(itemData)
+    const categoryId = itemData.categoryId;
 
-    if (categoryId) {
-      const category = await prisma.category.findFirst({
-        where: {
-          id: categoryId,
-          stockId: stock.id,
-        },
-      });
-      if (!category) {
-        throw new HttpError(404, "Categoria inválida ou não pertence a este usuário");
-      }
+    const [category, skuInUse] = await Promise.all([
+      categoryId
+        ? prisma.category.findFirst({ where: { id: categoryId, stockId: stock.id } })
+        : Promise.resolve(true),
+      itemData.sku
+        ? prisma.item.findFirst({ where: { sku: itemData.sku, stockId: stock.id } })
+        : Promise.resolve(null),
+    ]);
+
+
+    const issues: { code: "custom"; path: string[]; message: string }[] = [];
+
+    if (!validatedData.success) {
+      issues.push(...validatedData.error.issues as any)
     }
 
-    let imageUrl: string | null = null;
-    let imagePublicId: string | null = null;
+
+    if (categoryId && !category) {
+      issues.push({
+        code: "custom",
+        path: ["categoryId"],
+        message: "Categoria inválida ou não pertence a este usuário.",
+      });
+    }
+
+    if (skuInUse) {
+      issues.push({
+        code: "custom",
+        path: ["sku"],
+        message: "Este SKU já está em uso.",
+      });
+    }
+
+    if (issues.length > 0) throw new ZodError(issues);
+
+    const { categoryId: catId, ...rest } = validatedData.data!
+
+
+    let imageUrl: string | null = null
+    let imagePublicId: string | null = null
 
     if (file) {
-      const folder = `stock-gestor/stocks/${stock.id}/items`;
+      const folder = `stock-gestor/stocks/${stock.id}/items`
       const uploadResult = await cloudinaryService.upload(file.buffer, folder)
-      imageUrl = uploadResult.url;
-      imagePublicId = uploadResult.publicId;
+      imageUrl = uploadResult.url
+      imagePublicId = uploadResult.publicId
     }
 
     const data = {
@@ -47,70 +72,70 @@ const itemService = {
       ...(categoryId && { category: { connect: { id: categoryId } } }),
       imageUrl,
       imagePublicId,
-    };
+    }
 
-    const savedItem = await itemRepository.create(data);
+    const savedItem = await itemRepository.create(data)
 
     return {
       id: savedItem.id,
       name: savedItem.name,
       sku: savedItem.sku,
       quantity: savedItem.quantity,
-    };
+    }
   },
 
   findById: async (userId: string, itemId: string) => {
-    const item = await itemRepository.findById(itemId, userId);
-    if (!item) throw new HttpError(404, "Item não encontrado.");
+    const item = await itemRepository.findById(itemId, userId)
+    if (!item) throw new HttpError(404, "Item não encontrado.")
 
     return item
   },
 
   update: async (userId: string, itemId: string, data: UpdateItemInput, userName: string, file?: Express.Multer.File) => {
-    const item = await itemRepository.findById(itemId, userId);
-    if (!item) throw new HttpError(404, "Item não encontrado.");
+    const item = await itemRepository.findById(itemId, userId)
+    if (!item) throw new HttpError(404, "Item não encontrado.")
 
-    const validatedData = updateItemSchema.parse(data);
-    const { reason, categoryId, ...updates } = validatedData;
+    const validatedData = updateItemSchema.parse(data)
+    const { reason, categoryId, ...updates } = validatedData
 
-    let imageUrl = item.imageUrl;
-    let imagePublicId = item.imagePublicId;
+    let imageUrl = item.imageUrl
+    let imagePublicId = item.imagePublicId
 
     if (file) {
       if (item.imagePublicId) {
-        await cloudinaryService.delete(item.imagePublicId);
+        await cloudinaryService.delete(item.imagePublicId)
       }
-      const folder = `stock-gestor/stocks/${item.stockId}/items`;
+      const folder = `stock-gestor/stocks/${item.stockId}/items`
       const uploadResult = await cloudinaryService.upload(file.buffer, folder)
-      imageUrl = uploadResult.url;
-      imagePublicId = uploadResult.publicId;
+      imageUrl = uploadResult.url
+      imagePublicId = uploadResult.publicId
     }
 
-    const changes: any[] = [];
-    const fieldsToTrack = ['name', 'quantity', 'priceInCents', 'sku', 'categoryId'];
+    const changes: any[] = []
+    const fieldsToTrack = ['name', 'quantity', 'priceInCents', 'sku', 'categoryId']
 
     fieldsToTrack.forEach((field) => {
-      const oldValue = (item as any)[field];
-      const newValue = (updates as any)[field];
+      const oldValue = (item as any)[field]
+      const newValue = (updates as any)[field]
 
       if (newValue !== undefined && String(newValue) !== String(oldValue)) {
         changes.push({
           field,
           oldValue: String(oldValue ?? "Vazio"),
           newValue: String(newValue)
-        });
+        })
       }
-    });
+    })
 
     if (file) {
-      changes.push({ field: 'image', oldValue: item.imageUrl ? 'Sim' : 'Não', newValue: 'Sim' });
+      changes.push({ field: 'image', oldValue: item.imageUrl ? 'Sim' : 'Não', newValue: 'Sim' })
     }
 
     if (validatedData.categoryId) {
       const category = await prisma.category.findFirst({
         where: { id: validatedData.categoryId, stock: { userId } },
-      });
-      if (!category) throw new HttpError(400, "Categoria inválida.");
+      })
+      if (!category) throw new HttpError(400, "Categoria inválida.")
     }
 
     return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -124,7 +149,7 @@ const itemService = {
           imageUrl,
           imagePublicId,
         }
-      });
+      })
 
       if (changes.length > 0) {
         await tx.stockMovement.create({
@@ -135,23 +160,23 @@ const itemService = {
             reason: reason || "Edição de dados",
             changes
           }
-        });
+        })
       }
 
-      return updatedItem;
-    });
+      return updatedItem
+    })
   },
 
   delete: async (userId: string, itemId: string) => {
-    const item = await itemRepository.findById(itemId, userId);
-    if (!item) throw new HttpError(404, "Item não encontrado.");
+    const item = await itemRepository.findById(itemId, userId)
+    if (!item) throw new HttpError(404, "Item não encontrado.")
 
     if (item.imagePublicId) {
       await cloudinaryService.delete(item.imagePublicId)
     }
 
-    return await itemRepository.delete(userId, itemId);
+    return await itemRepository.delete(userId, itemId)
   },
-};
+}
 
-export default itemService;
+export default itemService

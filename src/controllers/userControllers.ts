@@ -14,9 +14,7 @@ export const userControllers = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const validatedData = await createUserSchema.parseAsync(req.body)
-      const newUser = await userService.create(validatedData)
-
+      const newUser = await userService.create(req.body)
       return res
         .status(201)
         .json({ success: "Usuário cadastrado com sucesso!", newUser })
@@ -36,8 +34,7 @@ export const userControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const validatedData = await updateUserSchema.parseAsync(req.body)
-      const updatedUser = await userService.update(req.params.id, validatedData, req.file)
+      const updatedUser = await userService.update(req.params.id, req.body, req.file)
 
       return res
         .status(201)
