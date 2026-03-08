@@ -2,7 +2,7 @@ import { HttpError } from "../errors/HttpError";
 import { userRepository } from "../repositories/userRepository";
 import { CreateUserInput, createUserSchema, UpdateUserInput } from "../schemas/userSchema";
 import * as bcrypt from "bcrypt";
-import { cloudinaryService } from "./cloudinaryService";
+import { cloudinaryService, CloudinaryUploadResult } from "./cloudinaryService";
 import { ZodError } from "zod";
 
 export const userService = {
@@ -69,7 +69,7 @@ export const userService = {
         await cloudinaryService.delete(user.avatarPublicId)
       }
       const folder = `stock-gestor/user/${user.id}/avatar`
-      const uploadResult = await cloudinaryService.upload(file.buffer, folder) as any
+      const uploadResult = await cloudinaryService.upload(file.buffer, folder) as CloudinaryUploadResult
       avatarUrl = uploadResult.url
       avatarPublicId = uploadResult.publicId
     }
