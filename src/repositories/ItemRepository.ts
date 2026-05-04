@@ -16,6 +16,8 @@ export const itemRepository = {
           priceInCents: true,
           sku: true,
           description: true,
+          createdAt: true,
+          updatedAt: true,
 
           category: {
             select: {
