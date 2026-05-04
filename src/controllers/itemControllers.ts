@@ -1,11 +1,18 @@
 import { NextFunction, Request, Response } from "express";
 import itemService from "../services/itemService";
+import { paginationSchema } from "../schemas/paginationSchema";
 
 const itemControllers = {
   items: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const items = await itemService.findAll(req.userId)
-      return res.status(200).json({ items })
+      const { page, limit } = paginationSchema.parse(req.query)
+      const { items, total } = await itemService.findAll(req.userId, page, limit)
+      const totalPages = Math.ceil(total / limit)
+
+      return res.status(200).json({
+        data: items,
+        meta: { totalItems: total, totalPages, currentPage: page },
+      })
     } catch (error) {
       next(error)
     }
@@ -14,7 +21,7 @@ const itemControllers = {
   findById: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const item = await itemService.findById(req.userId, req.params.id)
-      return res.status(200).json({ item })
+      return res.status(200).json({ data: item })
     } catch (error) {
       next(error)
     }
@@ -23,7 +30,7 @@ const itemControllers = {
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const newItem = await itemService.create(req.userId, req.body, req.file)
-      return res.status(201).json({ message: "Item cadastrado com sucesso!", newItem })
+      return res.status(201).json({ message: "Item cadastrado com sucesso!", data: newItem })
     } catch (error) {
       next(error)
     }

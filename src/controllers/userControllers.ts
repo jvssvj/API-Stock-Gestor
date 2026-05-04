@@ -5,7 +5,7 @@ export const userControllers = {
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const newUser = await userService.create(req.body)
-      return res.status(201).json({ message: "Usuário cadastrado com sucesso!", newUser })
+      return res.status(201).json({ message: "Usuário cadastrado com sucesso!", data: newUser })
     } catch (error) {
       next(error)
     }
@@ -14,7 +14,7 @@ export const userControllers = {
   findMe: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await userService.findMe(req.userId)
-      return res.status(200).json({ message: "Usuário encontrado!", user })
+      return res.status(200).json({ message: "Usuário encontrado!", data: user })
     } catch (error) {
       next(error)
     }
@@ -23,7 +23,7 @@ export const userControllers = {
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const updatedUser = await userService.update(req.userId, req.body, req.file)
-      return res.status(200).json({ message: "Usuário atualizado com sucesso!", updatedUser })
+      return res.status(200).json({ message: "Usuário atualizado com sucesso!", data: updatedUser })
     } catch (error) {
       next(error)
     }

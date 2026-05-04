@@ -2,33 +2,38 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../database";
 
 export const itemRepository = {
-  findAll: async (userId: string) => {
-    return await prisma.item.findMany({
-      where: {
-        stock: { userId }
-      },
+  findAll: async (userId: string, page: number, limit: number) => {
+    const skip = (page - 1) * limit
+    const where = { stock: { userId } }
 
-      select: {
-        id: true,
-        name: true,
-        quantity: true,
-        priceInCents: true,
-        sku: true,
-        description: true,
+    const [items, total] = await Promise.all([
+      prisma.item.findMany({
+        where,
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          priceInCents: true,
+          sku: true,
+          description: true,
 
-        category: {
-          select: {
-            id: true,
-            name: true,
-            color: true,
-            iconName: true
-          }
+          category: {
+            select: {
+              id: true,
+              name: true,
+              color: true,
+              iconName: true
+            }
+          },
         },
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    })
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.item.count({ where }),
+    ])
+
+    return { items, total }
   },
 
   create: async (data: Prisma.ItemCreateInput) => {

@@ -4,8 +4,8 @@ import { categoryRepository } from "../repositories/categoryRepository";
 import { createCategorySchema, CreateCategoryInput, UpdateCategoryInput, updateCategorySchema } from "../schemas/categorySchema";
 
 export const categoryService = {
-  findAll: async (stockId: string) => {
-    return await categoryRepository.findAll(stockId)
+  findAll: async (stockId: string, page: number, limit: number) => {
+    return await categoryRepository.findAll(stockId, page, limit)
   },
 
   create: async (stockId: string, data: CreateCategoryInput) => {

@@ -3,13 +3,21 @@ import { prisma } from "../database";
 import { CreateCategoryInput, UpdateCategoryInput } from "../schemas/categorySchema";
 
 export const categoryRepository = {
-  findAll: async (stockId: string) => {
-    return await prisma.category.findMany({
-      where: {
-        stockId
-      },
-      orderBy: { name: 'asc' }
-    })
+  findAll: async (stockId: string, page: number, limit: number) => {
+    const skip = (page - 1) * limit
+    const where = { stockId }
+
+    const [categories, total] = await Promise.all([
+      prisma.category.findMany({
+        where,
+        orderBy: { name: 'asc' },
+        skip,
+        take: limit,
+      }),
+      prisma.category.count({ where }),
+    ])
+
+    return { categories, total }
   },
 
   create: async (stockId: string, data: CreateCategoryInput) => {

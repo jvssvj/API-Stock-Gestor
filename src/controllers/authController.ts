@@ -5,7 +5,7 @@ export const authControllers = {
   login: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await authService.login(req.body)
-      return res.status(200).json(result);
+      return res.status(200).json({ data: result });
     } catch (error) {
       next(error)
     }

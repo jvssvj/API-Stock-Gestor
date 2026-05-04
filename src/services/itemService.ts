@@ -7,8 +7,8 @@ import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 
 const itemService = {
-  findAll: async (userId: string) => {
-    return await itemRepository.findAll(userId)
+  findAll: async (userId: string, page: number, limit: number) => {
+    return await itemRepository.findAll(userId, page, limit)
   },
 
   create: async (userId: string, itemData: CreateItemInput, file?: Express.Multer.File) => {
