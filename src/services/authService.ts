@@ -24,14 +24,15 @@ export const authService = {
     }
 
     const secret = process.env.JWT_SECRET!
-    const token = jwt.sign({ userId: user.id, userName: user.name, stockId: user.stock?.id }, secret, { expiresIn: "1d" })
+    const token = jwt.sign({ userId: user.id, firstName: user.firstName, lastName: user.lastName, stockId: user.stock?.id }, secret, { expiresIn: "1d" })
 
     return {
       token,
       user: {
         userId: user.id,
         avatarUrl: user.avatarUrl,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         stockId: user.stock?.id
       },

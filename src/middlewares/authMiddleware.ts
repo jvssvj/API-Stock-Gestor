@@ -4,7 +4,8 @@ import { HttpError } from "../errors/HttpError";
 
 interface TokenPayload {
   userId: string
-  userName: string
+  firstName: string
+  lastName: string
   stockId: string
 }
 
@@ -23,7 +24,8 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload
 
     req.userId = decoded.userId
-    req.userName = decoded.userName
+    req.firstName = decoded.firstName
+    req.lastName = decoded.lastName
     req.stockId = decoded.stockId
 
     return next()
