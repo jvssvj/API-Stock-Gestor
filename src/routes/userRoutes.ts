@@ -5,7 +5,7 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 
 const userRoutes = Router()
 
-userRoutes.post("/users", userControllers.create)
+userRoutes.post("/register", userControllers.create)
 userRoutes.get("/users/me", authMiddleware, userControllers.findMe)
 userRoutes.put("/users/me", authMiddleware, uploadMiddleware.single('image'), userControllers.update)
 userRoutes.delete("/users/me", authMiddleware, userControllers.delete)

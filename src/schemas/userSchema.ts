@@ -1,7 +1,10 @@
 import z from "zod";
 
 export const createUserSchema = z.object({
-  name: z.string("O nome é obrigatório!")
+  firstName: z.string("O nome é obrigatório!")
+    .min(4, "O nome precisa ter no mínimo 4 caracteres.")
+    .max(50, "O nome deve ter no máximo 50 caracteres."),
+  lastName: z.string("O nome é obrigatório!")
     .min(4, "O nome precisa ter no mínimo 4 caracteres.")
     .max(50, "O nome deve ter no máximo 50 caracteres."),
   email: z
@@ -13,7 +16,12 @@ export const createUserSchema = z.object({
 })
 
 export const updateUserSchema = z.object({
-  name: z
+  firstName: z
+    .string("O nome é obrigatório!")
+    .min(4, "O nome precisa ter no mínimo 4 caracteres.")
+    .max(50, "O nome deve ter no máximo 50 caracteres.")
+    .optional(),
+  lastName: z
     .string("O nome é obrigatório!")
     .min(4, "O nome precisa ter no mínimo 4 caracteres.")
     .max(50, "O nome deve ter no máximo 50 caracteres.")
