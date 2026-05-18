@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const createItemSchema = z.object({
   name: z
@@ -25,29 +25,19 @@ export const createItemSchema = z.object({
 export const updateItemSchema = createItemSchema
   .partial()
   .extend({
-    reason: z.string().optional(),
+    reason: z.string().trim().min(1, "O motivo da atualização é obrigatório."),
+    categoryId: z.string().optional().nullable()
   })
   .refine(
     (data) => {
       const { reason, ...fields } = data;
-      return Object.values(fields).some((value) => value !== undefined);
+      return Object.values(fields).some((value) => value !== undefined && value !== "");
     },
     {
       path: ["form"],
       message: "Atualize pelo menos um campo para atualizar.",
     }
-  )
-  .refine(
-    (data) => {
-      const { reason, ...fields } = data;
-      const hasFields = Object.values(fields).some((value) => value !== undefined);
-      return !hasFields || (hasFields && !!reason);
-    },
-    {
-      path: ["reason"],
-      message: "O motivo da atualização é obrigatório.",
-    }
   );
 
 export type CreateItemInput = z.infer<typeof createItemSchema>
-export type UpdateItemInput = z.infer<typeof updateItemSchema>;
+export type UpdateItemInput = z.infer<typeof updateItemSchema>

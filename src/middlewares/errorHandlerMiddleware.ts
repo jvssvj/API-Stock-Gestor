@@ -29,7 +29,7 @@ const errorHandlerMiddleware: ErrorRequestHandler = (
     }
     return res.status(400).json({ message: `Erro no upload: ${error.message}` })
   }
-
+  console.log(error)
   return res.status(500).json({ message: "Internal server error." })
 }
 

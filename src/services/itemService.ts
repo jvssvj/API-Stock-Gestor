@@ -83,23 +83,28 @@ const itemService = {
     return item
   },
 
-  update: async (userId: string, itemId: string, data: UpdateItemInput, userName: string, file?: Express.Multer.File) => {
+  update: async (userId: string, itemId: string, data: UpdateItemInput, firstName: string, lastName: string, file?: Express.Multer.File) => {
     const item = await itemRepository.findById(itemId, userId)
     if (!item) throw new HttpError(404, "Item não encontrado.")
 
+    // 1. O Zod valida puramente os dados de texto que vieram no body
     const validatedData = updateItemSchema.parse(data)
+
+    // 2. Extrai os campos normais
     const { reason, categoryId, ...updates } = validatedData
 
     const fieldsToTrack = ["name", "quantity", "priceInCents", "sku"] as const;
 
+    // 3. Forçamos a checagem manual: se houver arquivo, 'hasChanges' obrigatoriamente será TRUE
     const hasChanges =
+      !!file || // Se enviou arquivo, já conta como mudança direto aqui
+      (categoryId !== undefined && categoryId !== item.category?.id) ||
       fieldsToTrack.some((field) => {
         const newValue = updates[field];
         return newValue !== undefined && String(newValue) !== String(item[field]);
-      }) ||
-      (categoryId !== undefined && categoryId !== item.category?.id) ||
-      !!file;
+      });
 
+    // Se não mudou texto, nem categoria, E não tem arquivo, aí sim dispara o erro
     if (!hasChanges) {
       throw new ZodError([{
         code: "custom",
@@ -166,26 +171,32 @@ const itemService = {
         where: { id: itemId },
         data: {
           ...updates,
-          ...(categoryId && { category: { connect: { id: categoryId } } }),
           imageUrl,
           imagePublicId,
+          category: categoryId
+            ? { connect: { id: categoryId } }
+            : categoryId === null
+              ? { disconnect: true }
+              : undefined,
         },
       });
+
+      const fullName = `${firstName} ${lastName}`.trim();
 
       if (changes.length > 0) {
         await tx.stockMovement.create({
           data: {
             itemId,
             userId,
-            userName,
-            reason: reason || "Edição de dados",
-            changes,
+            userName: fullName,
+            reason: reason,
+            changes: changes,
           },
         });
       }
 
       return updatedItem;
-    })
+    });
   },
 
   delete: async (userId: string, itemId: string) => {

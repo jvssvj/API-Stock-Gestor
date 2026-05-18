@@ -38,16 +38,18 @@ const itemControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("BODY RECEBIDO:", req.body);
+      console.log("ARQUIVO RECEBIDO:", req.file);
       const { id } = req.params
       const userId = req.userId
-      const userName = req.userName
 
       const updatedItem = await itemService.update(
         userId,
         id,
         req.body,
-        userName,
-        req.file
+        req.firstName,
+        req.lastName,
+        req.file as Express.Multer.File | undefined
       )
 
       return res.status(200).json({ message: "Item atualizado com sucesso!", data: updatedItem, })
