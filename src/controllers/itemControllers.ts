@@ -29,7 +29,11 @@ const itemControllers = {
 
   create: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const newItem = await itemService.create(req.userId, req.body, req.file)
+      const newItem = await itemService.create(
+        req.userId,
+        req.body,
+        req.file as Express.Multer.File | undefined
+      )
       return res.status(201).json({ message: "Item cadastrado com sucesso!", data: newItem })
     } catch (error) {
       next(error)
@@ -38,8 +42,6 @@ const itemControllers = {
 
   update: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("BODY RECEBIDO:", req.body);
-      console.log("ARQUIVO RECEBIDO:", req.file);
       const { id } = req.params
       const userId = req.userId
 

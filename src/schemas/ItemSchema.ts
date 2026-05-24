@@ -31,7 +31,7 @@ export const updateItemSchema = createItemSchema
   .refine(
     (data) => {
       const { reason, ...fields } = data;
-      return Object.values(fields).some((value) => value !== undefined && value !== "");
+      return Object.values(fields).some((value) => value !== undefined && value !== "" && value !== null);
     },
     {
       path: ["form"],
