@@ -91,20 +91,20 @@ const itemService = {
     const validatedData = updateItemSchema.parse(data)
 
     // 2. Extrai os campos normais
-    const { reason, categoryId, ...updates } = validatedData
+    const { reason, categoryId, removeImage, ...updates } = validatedData
 
     const fieldsToTrack = ["name", "quantity", "priceInCents", "sku"] as const;
 
     // 3. Forçamos a checagem manual: se houver arquivo, 'hasChanges' obrigatoriamente será TRUE
     const hasChanges =
-      !!file || // Se enviou arquivo, já conta como mudança direto aqui
+      !!file ||
+      (removeImage && !!item.imagePublicId) ||
       (categoryId !== undefined && categoryId !== item.category?.id) ||
       fieldsToTrack.some((field) => {
         const newValue = updates[field];
         return newValue !== undefined && String(newValue) !== String(item[field]);
       });
 
-    // Se não mudou texto, nem categoria, E não tem arquivo, aí sim dispara o erro
     if (!hasChanges) {
       throw new ZodError([{
         code: "custom",
@@ -112,6 +112,7 @@ const itemService = {
         message: "Atualize pelo menos um campo para atualizar.",
       }]);
     }
+
 
     const [category, skuInUse] = await Promise.all([
       categoryId
@@ -143,6 +144,10 @@ const itemService = {
       const uploadResult = await cloudinaryService.upload(file.buffer, folder)
       imageUrl = uploadResult.url
       imagePublicId = uploadResult.publicId
+    } else if (removeImage && item.imagePublicId) {
+      await cloudinaryService.delete(item.imagePublicId)
+      imageUrl = null
+      imagePublicId = null
     }
 
     const changes: { field: string; oldValue: string; newValue: string }[] = []
@@ -164,6 +169,8 @@ const itemService = {
 
     if (file) {
       changes.push({ field: "image", oldValue: item.imageUrl ? "Sim" : "Não", newValue: "Sim" })
+    } else if (removeImage && item.imageUrl) {
+      changes.push({ field: "image", oldValue: "Sim", newValue: "Não" })
     }
 
     return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
