@@ -28,7 +28,7 @@ export const updateItemSchema = createItemSchema
     reason: z.string().trim().min(1, "O motivo da atualização é obrigatório."),
     categoryId: z.string().optional().nullable(),
     removeImage: z.string().optional().transform((v: any) => v === "true")
-  }),
+  })
   .refine(
     (data) => {
       const { reason, ...fields } = data;
