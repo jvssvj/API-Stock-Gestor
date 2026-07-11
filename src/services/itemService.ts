@@ -73,6 +73,7 @@ const itemService = {
       name: savedItem.name,
       sku: savedItem.sku,
       quantity: savedItem.quantity,
+      imageUrl: savedItem.imageUrl,
     }
   },
 

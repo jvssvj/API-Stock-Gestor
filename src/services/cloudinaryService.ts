@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
+import type { UploadApiOptions } from 'cloudinary';
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_NAME,
@@ -11,14 +12,22 @@ export interface CloudinaryUploadResult {
     publicId: string
 }
 
+type CloudinaryUploadOptions = Pick<UploadApiOptions, "transformation">
+
 export const cloudinaryService = {
-    upload: async (fileBuffer: Buffer, folderPath: string): Promise<CloudinaryUploadResult> => {
+    upload: async (
+        fileBuffer: Buffer,
+        folderPath: string,
+        options: CloudinaryUploadOptions = {}
+    ): Promise<CloudinaryUploadResult> => {
         return new Promise((resolve, reject) => {
+            const uploadOptions: UploadApiOptions = {
+                folder: folderPath,
+                ...options,
+            }
+
             cloudinary.uploader.upload_stream(
-                {
-                    folder: folderPath,
-                    transformation: [{ width: 800, height: 500, crop: "limit" }]
-                },
+                uploadOptions,
                 (error, result) => {
                     if (error || !result) return reject(error)
                     resolve({
