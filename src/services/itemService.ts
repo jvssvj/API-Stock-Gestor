@@ -66,14 +66,21 @@ const itemService = {
       imagePublicId,
     }
 
-    const savedItem = await itemRepository.create(data)
+    try {
+      const savedItem = await itemRepository.create(data)
 
-    return {
-      id: savedItem.id,
-      name: savedItem.name,
-      sku: savedItem.sku,
-      quantity: savedItem.quantity,
-      imageUrl: savedItem.imageUrl,
+      return {
+        id: savedItem.id,
+        name: savedItem.name,
+        sku: savedItem.sku,
+        quantity: savedItem.quantity,
+        imageUrl: savedItem.imageUrl,
+      }
+    } catch (error) {
+      if (imagePublicId) {
+        await cloudinaryService.delete(imagePublicId)
+      }
+      throw error
     }
   },
 
@@ -81,7 +88,8 @@ const itemService = {
     const item = await itemRepository.findById(itemId, userId)
     if (!item) throw new HttpError(404, "Item não encontrado.")
 
-    return item
+    const { imagePublicId, ...publicItem } = item
+    return publicItem
   },
 
   update: async (userId: string, itemId: string, data: UpdateItemInput, firstName: string, lastName: string, file?: Express.Multer.File) => {
@@ -138,15 +146,15 @@ const itemService = {
 
     let imageUrl = item.imageUrl
     let imagePublicId = item.imagePublicId
+    let newImagePublicId: string | null = null
 
     if (file) {
-      if (item.imagePublicId) await cloudinaryService.delete(item.imagePublicId)
       const folder = `stock-gestor/stocks/${item.stockId}/items`
       const uploadResult = await cloudinaryService.upload(file.buffer, folder)
       imageUrl = uploadResult.url
       imagePublicId = uploadResult.publicId
+      newImagePublicId = uploadResult.publicId
     } else if (removeImage && item.imagePublicId) {
-      await cloudinaryService.delete(item.imagePublicId)
       imageUrl = null
       imagePublicId = null
     }
@@ -164,8 +172,8 @@ const itemService = {
       }
     })
 
-    if (categoryId && categoryId !== item.category?.id) {
-      changes.push({ field: "categoryId", oldValue: item.category?.id ?? "Vazio", newValue: categoryId })
+    if (categoryId !== undefined && categoryId !== item.category?.id) {
+      changes.push({ field: "categoryId", oldValue: item.category?.id ?? "Vazio", newValue: categoryId ?? "Vazio" })
     }
 
     if (file) {
@@ -174,48 +182,64 @@ const itemService = {
       changes.push({ field: "image", oldValue: "Sim", newValue: "Não" })
     }
 
-    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      const updatedItem = await tx.item.update({
-        where: { id: itemId },
-        data: {
-          ...updates,
-          imageUrl,
-          imagePublicId,
-          category: categoryId
-            ? { connect: { id: categoryId } }
-            : categoryId === null
-              ? { disconnect: true }
-              : undefined,
-        },
-      });
-
-      const fullName = `${firstName} ${lastName}`.trim();
-
-      if (changes.length > 0) {
-        await tx.stockMovement.create({
+    try {
+      const updatedItem = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        const updatedItem = await tx.item.update({
+          where: { id: itemId },
           data: {
-            itemId,
-            userId,
-            userName: fullName,
-            reason: reason,
-            changes: changes,
+            ...updates,
+            imageUrl,
+            imagePublicId,
+            category: categoryId
+              ? { connect: { id: categoryId } }
+              : categoryId === null
+                ? { disconnect: true }
+                : undefined,
           },
         });
+
+        const fullName = `${firstName} ${lastName}`.trim();
+
+        if (changes.length > 0) {
+          await tx.stockMovement.create({
+            data: {
+              itemId,
+              userId,
+              userName: fullName,
+              reason: reason,
+              changes: changes,
+            },
+          });
+        }
+
+        return updatedItem;
+      });
+
+      if ((newImagePublicId || removeImage) && item.imagePublicId) {
+        await cloudinaryService.delete(item.imagePublicId)
       }
 
-      return updatedItem;
-    });
+      const { imagePublicId: _imagePublicId, ...publicUpdatedItem } = updatedItem
+      return publicUpdatedItem
+    } catch (error) {
+      if (newImagePublicId) {
+        await cloudinaryService.delete(newImagePublicId)
+      }
+      throw error
+    }
   },
 
   delete: async (userId: string, itemId: string) => {
     const item = await itemRepository.findById(itemId, userId)
     if (!item) throw new HttpError(404, "Item não encontrado.")
 
+    const deletedItem = await itemRepository.delete(userId, itemId)
+
     if (item.imagePublicId) {
       await cloudinaryService.delete(item.imagePublicId)
     }
 
-    return await itemRepository.delete(userId, itemId)
+    return deletedItem
   },
 }
 

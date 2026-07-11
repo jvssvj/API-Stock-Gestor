@@ -7,11 +7,18 @@ import itemRoutes from "./routes/itemRoutes";
 import categoryRoutes from "./routes/categoryRoutes";
 import dashboardRoutes from "./routes/dashboardRoutes";
 import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware";
+import { securityHeadersMiddleware } from './middlewares/securityHeadersMiddleware';
+import { generalRateLimiter } from './middlewares/rateLimitMiddleware';
+import { validateEnv } from './config/env';
 
+validateEnv()
 const app = express()
 
+app.set("trust proxy", 1)
+app.use(securityHeadersMiddleware)
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN }))
-app.use(express.json())
+app.use(generalRateLimiter)
+app.use(express.json({ limit: "1mb" }))
 app.use("/api", authRoutes)
 app.use("/api", userRoutes)
 app.use("/api", itemRoutes)

@@ -2,6 +2,7 @@ import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
 import { HttpError } from "../errors/HttpError";
 import { ZodError } from "zod";
 import multer from "multer";
+import { Prisma } from "@prisma/client";
 
 const errorHandlerMiddleware: ErrorRequestHandler = (
   error: any,
@@ -29,6 +30,17 @@ const errorHandlerMiddleware: ErrorRequestHandler = (
     }
     return res.status(400).json({ message: `Erro no upload: ${error.message}` })
   }
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      return res.status(409).json({ message: "Já existe um registro com esses dados." })
+    }
+
+    if (error.code === "P2025") {
+      return res.status(404).json({ message: "Registro não encontrado." })
+    }
+  }
+
   console.log(error)
   return res.status(500).json({ message: "Internal server error." })
 }

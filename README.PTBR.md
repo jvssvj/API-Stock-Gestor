@@ -17,6 +17,7 @@ API RESTful para gestão de estoque com autenticação JWT, persistência em Pos
 - [Scripts](#scripts)
 - [Modelo de Dados](#modelo-de-dados)
 - [Autenticação](#autenticação)
+- [Segurança e Rate Limit](#segurança-e-rate-limit)
 - [Paginação](#paginação)
 - [Upload de Imagens](#upload-de-imagens)
 - [Padrão de Resposta](#padrão-de-resposta)
@@ -37,6 +38,7 @@ API RESTful para gestão de estoque com autenticação JWT, persistência em Pos
 - Estatísticas de dashboard para acompanhamento do estoque.
 - Histórico de movimentações para atualizações de itens.
 - Upload de imagens para o Cloudinary com limpeza da imagem antiga ao substituir ou deletar.
+- Headers de segurança, rate limit e validação da assinatura real das imagens.
 - Validação e tratamento de erros centralizados.
 
 ## Tecnologias
@@ -85,7 +87,7 @@ Crie um arquivo `.env` na raiz do projeto:
 
 ```env
 DATABASE_URL=postgresql://user:password@host:port/database
-JWT_SECRET=seu_jwt_secret
+JWT_SECRET=seu_jwt_secret_com_pelo_menos_32_chars
 CLOUDINARY_NAME=seu_cloud_name
 CLOUDINARY_KEY=sua_api_key
 CLOUDINARY_SECRET=seu_api_secret
@@ -96,7 +98,7 @@ PORT=3000
 | Variável | Obrigatória | Descrição |
 |----------|-------------|-----------|
 | `DATABASE_URL` | Sim | String de conexão PostgreSQL usada pelo Prisma. |
-| `JWT_SECRET` | Sim | Segredo usado para assinar e verificar tokens JWT. |
+| `JWT_SECRET` | Sim | Segredo usado para assinar e verificar tokens JWT. Precisa ter pelo menos 32 caracteres. |
 | `CLOUDINARY_NAME` | Sim | Cloud name do Cloudinary. |
 | `CLOUDINARY_KEY` | Sim | API key do Cloudinary. |
 | `CLOUDINARY_SECRET` | Sim | API secret do Cloudinary. |
@@ -216,6 +218,19 @@ O payload do JWT inclui:
 - `lastName`
 - `stockId`
 
+## Segurança e Rate Limit
+
+A API aplica headers de segurança em todas as respostas, incluindo `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy` e `Cross-Origin-Resource-Policy`.
+
+Limites de requisição:
+
+| Escopo | Limite | Janela |
+|--------|--------|--------|
+| Rotas gerais da API | 300 requisições | 15 minutos |
+| Login e cadastro | 20 requisições | 15 minutos |
+
+Quando o limite é excedido, a API retorna `429 Too Many Requests`.
+
 ## Paginação
 
 As rotas de listagem de itens e categorias aceitam paginação por query params.
@@ -258,6 +273,7 @@ Limites e comportamento:
 
 - Tamanho máximo: `2MB`.
 - Imagens são enviadas para o Cloudinary.
+- A assinatura real do arquivo é validada antes do upload para o Cloudinary, mesmo que o cliente envie um MIME type válido.
 - Imagens são armazenadas na qualidade original enviada por padrão.
 - Quando uma imagem de item ou avatar de usuário é substituída, a imagem anterior é deletada do Cloudinary.
 - Quando um item ou usuário é deletado, a imagem relacionada também é deletada quando existir.
@@ -321,6 +337,22 @@ Listagens paginadas incluem `meta`:
 ```json
 {
   "message": "O limite do arquivo é de 2MB."
+}
+```
+
+### Erro de Conflito - 409
+
+```json
+{
+  "message": "Já existe um registro com esses dados."
+}
+```
+
+### Erro de Rate Limit - 429
+
+```json
+{
+  "message": "Muitas requisições. Tente novamente em alguns minutos."
 }
 ```
 
@@ -417,7 +449,6 @@ Resposta de sucesso: `201 Created`
     "id": "user-id",
     "email": "joao@example.com",
     "phone": null,
-    "avatarPublicId": null,
     "avatarUrl": null,
     "firstName": "João",
     "lastName": "Silva"
@@ -606,7 +637,6 @@ Resposta de sucesso: `200 OK`
   "data": {
     "id": "item-id",
     "imageUrl": "https://res.cloudinary.com/...",
-    "imagePublicId": "stock-gestor/stocks/...",
     "name": "Notebook",
     "description": "Notebook Dell",
     "quantity": 10,
@@ -682,7 +712,6 @@ Resposta de sucesso: `200 OK`
     "priceInCents": 389900,
     "sku": "NOTE-001",
     "imageUrl": "https://res.cloudinary.com/...",
-    "imagePublicId": "stock-gestor/stocks/...",
     "stockId": "stock-id",
     "categoryId": "category-id",
     "createdAt": "2026-01-01T00:00:00.000Z",

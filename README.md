@@ -17,6 +17,7 @@ RESTful API for inventory management with JWT authentication, PostgreSQL persist
 - [Scripts](#scripts)
 - [Data Model](#data-model)
 - [Authentication](#authentication)
+- [Security and Rate Limiting](#security-and-rate-limiting)
 - [Pagination](#pagination)
 - [Image Uploads](#image-uploads)
 - [Response Pattern](#response-pattern)
@@ -37,6 +38,7 @@ RESTful API for inventory management with JWT authentication, PostgreSQL persist
 - Dashboard statistics for inventory monitoring.
 - Stock movement history for item updates.
 - Image upload to Cloudinary with old image cleanup on replacement or deletion.
+- Security headers, rate limiting, and image signature validation.
 - Centralized validation and error handling.
 
 ## Tech Stack
@@ -85,7 +87,7 @@ Create a `.env` file in the project root:
 
 ```env
 DATABASE_URL=postgresql://user:password@host:port/database
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=your_jwt_secret_with_at_least_32_chars
 CLOUDINARY_NAME=your_cloud_name
 CLOUDINARY_KEY=your_api_key
 CLOUDINARY_SECRET=your_api_secret
@@ -96,7 +98,7 @@ PORT=3000
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string used by Prisma. |
-| `JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens. |
+| `JWT_SECRET` | Yes | Secret used to sign and verify JWT tokens. Must have at least 32 characters. |
 | `CLOUDINARY_NAME` | Yes | Cloudinary cloud name. |
 | `CLOUDINARY_KEY` | Yes | Cloudinary API key. |
 | `CLOUDINARY_SECRET` | Yes | Cloudinary API secret. |
@@ -216,6 +218,19 @@ The JWT payload includes:
 - `lastName`
 - `stockId`
 
+## Security and Rate Limiting
+
+The API applies security headers to all responses, including `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and `Cross-Origin-Resource-Policy`.
+
+Rate limits:
+
+| Scope | Limit | Window |
+|-------|-------|--------|
+| General API routes | 300 requests | 15 minutes |
+| Login and registration | 20 requests | 15 minutes |
+
+When the limit is exceeded, the API returns `429 Too Many Requests`.
+
 ## Pagination
 
 The item and category list endpoints accept pagination through query parameters.
@@ -258,6 +273,7 @@ Limits and behavior:
 
 - Max file size: `2MB`.
 - Images are uploaded to Cloudinary.
+- The uploaded file signature is validated before Cloudinary upload, even if the client sends a valid MIME type.
 - Images are stored in their original uploaded quality by default.
 - When an item image or user avatar is replaced, the previous Cloudinary image is deleted.
 - When an item or user is deleted, its related Cloudinary image is deleted when available.
@@ -321,6 +337,22 @@ Paginated list responses include `meta`:
 ```json
 {
   "message": "The file size limit is 2MB."
+}
+```
+
+### Conflict Error - 409
+
+```json
+{
+  "message": "A record with this data already exists."
+}
+```
+
+### Rate Limit Error - 429
+
+```json
+{
+  "message": "Too many requests. Try again in a few minutes."
 }
 ```
 
@@ -417,7 +449,6 @@ Success response: `201 Created`
     "id": "user-id",
     "email": "john@example.com",
     "phone": null,
-    "avatarPublicId": null,
     "avatarUrl": null,
     "firstName": "John",
     "lastName": "Doe"
@@ -606,7 +637,6 @@ Success response: `200 OK`
   "data": {
     "id": "item-id",
     "imageUrl": "https://res.cloudinary.com/...",
-    "imagePublicId": "stock-gestor/stocks/...",
     "name": "Notebook",
     "description": "Dell notebook",
     "quantity": 10,
@@ -682,7 +712,6 @@ Success response: `200 OK`
     "priceInCents": 389900,
     "sku": "NOTE-001",
     "imageUrl": "https://res.cloudinary.com/...",
-    "imagePublicId": "stock-gestor/stocks/...",
     "stockId": "stock-id",
     "categoryId": "category-id",
     "createdAt": "2026-01-01T00:00:00.000Z",

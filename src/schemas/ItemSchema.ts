@@ -29,16 +29,6 @@ export const updateItemSchema = createItemSchema
     categoryId: z.string().optional().nullable(),
     removeImage: z.string().optional().transform((v: any) => v === "true")
   })
-  .refine(
-    (data) => {
-      const { reason, ...fields } = data;
-      return Object.values(fields).some((value) => value !== undefined && value !== "" && value !== null);
-    },
-    {
-      path: ["form"],
-      message: "Atualize pelo menos um campo para atualizar.",
-    }
-  );
 
 export type CreateItemInput = z.infer<typeof createItemSchema>
 export type UpdateItemInput = z.infer<typeof updateItemSchema>
