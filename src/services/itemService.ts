@@ -102,7 +102,7 @@ const itemService = {
     // 2. Extrai os campos normais
     const { reason, categoryId, removeImage, ...updates } = validatedData
 
-    const fieldsToTrack = ["name", "quantity", "priceInCents", "sku"] as const;
+    const fieldsToTrack = ["name", "description", "quantity", "priceInCents", "sku"] as const;
 
     // 3. Forçamos a checagem manual: se houver arquivo, 'hasChanges' obrigatoriamente será TRUE
     const hasChanges =
