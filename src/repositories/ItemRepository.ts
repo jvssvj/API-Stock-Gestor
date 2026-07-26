@@ -68,7 +68,9 @@ export const itemRepository = {
         category: {
           select: {
             id: true,
-            name: true
+            name: true,
+            color: true,
+            iconName: true
           }
         },
 
