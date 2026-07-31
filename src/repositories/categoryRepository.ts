@@ -13,8 +13,17 @@ export const categoryRepository = {
         orderBy: { name: 'asc' },
         skip,
         take: limit,
+        include: {
+          items: true,
+          _count: {
+            select: {
+              items: true
+            }
+          }
+        }
       }),
       prisma.category.count({ where }),
+
     ])
 
     return { categories, total }
@@ -37,8 +46,16 @@ export const categoryRepository = {
     return await prisma.category.findUnique({
       where: {
         id: categoryId,
-        stockId
-      }
+        stockId,
+      },
+      include: {
+        items: true,
+        _count: {
+          select: {
+            items: true,
+          },
+        },
+      },
     })
   },
 
