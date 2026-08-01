@@ -96,10 +96,8 @@ const itemService = {
     const item = await itemRepository.findById(itemId, userId)
     if (!item) throw new HttpError(404, "Item não encontrado.")
 
-    // 1. O Zod valida puramente os dados de texto que vieram no body
     const validatedData = updateItemSchema.parse(data)
 
-    // 2. Extrai os campos normais
     const { reason, categoryId, removeImage, ...updates } = validatedData
 
     const fieldsToTrack = ["name", "description", "quantity", "priceInCents", "sku"] as const;
@@ -173,13 +171,25 @@ const itemService = {
     })
 
     if (categoryId !== undefined && categoryId !== item.category?.id) {
-      changes.push({ field: "categoryId", oldValue: item.category?.id ?? "Vazio", newValue: categoryId ?? "Vazio" })
+      changes.push({
+        field: "category",
+        oldValue: item.category?.name ?? "Vazio",
+        newValue: category && category !== true ? category.name : "Vazio",
+      })
     }
 
     if (file) {
-      changes.push({ field: "image", oldValue: item.imageUrl ? "Sim" : "Não", newValue: "Sim" })
+      changes.push({
+        field: "image",
+        oldValue: item.imageUrl ? "Sim" : "Não",
+        newValue: "Sim"
+      })
     } else if (removeImage && item.imageUrl) {
-      changes.push({ field: "image", oldValue: "Sim", newValue: "Não" })
+      changes.push({
+        field: "image",
+        oldValue: "Sim",
+        newValue: "Não"
+      })
     }
 
     try {
