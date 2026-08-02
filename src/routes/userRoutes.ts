@@ -10,5 +10,6 @@ userRoutes.post("/register", authRateLimiter, userControllers.create)
 userRoutes.get("/users/me", authMiddleware, userControllers.findMe)
 userRoutes.put("/users/me", authMiddleware, uploadMiddleware.single('image'), userControllers.update)
 userRoutes.delete("/users/me", authMiddleware, userControllers.delete)
+userRoutes.post("/users/me/password", authMiddleware, userControllers.changePassword)
 
 export default userRoutes

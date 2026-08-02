@@ -8,15 +8,25 @@ datasource db {
 }
 
 model User {
-  id             String  @id @default(uuid())
-  email          String  @unique
+  id             String    @id @default(uuid())
+  email          String    @unique
   password       String
-  phone          String? @unique
+  phone          String?   @unique
   avatarPublicId String?
   avatarUrl      String?
   firstName      String
   lastName       String
   stock          Stock?
+  otpCodes       OtpCode[]
+}
+
+model OtpCode {
+  id        String   @id @default(uuid())
+  userId    String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Stock {

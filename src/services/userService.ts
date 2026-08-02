@@ -4,6 +4,8 @@ import { CreateUserInput, createUserSchema, UpdateUserInput, updateUserSchema } 
 import * as bcrypt from "bcrypt";
 import { cloudinaryService, CloudinaryUploadResult } from "./cloudinaryService";
 import { ZodError } from "zod";
+import { otpService } from "./otpService";
+import { changePasswordSchema } from "../schemas/authSchema";
 
 export const userService = {
   create: async (data: CreateUserInput) => {
@@ -33,15 +35,15 @@ export const userService = {
     return await userRepository.create(user)
   },
 
-  findMe: async (userId: string) => {
-    const user = await userRepository.findMe(userId)
+  findById: async (userId: string) => {
+    const user = await userRepository.findById(userId)
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!")
     const { avatarPublicId, ...publicUser } = user
     return publicUser
   },
 
   update: async (userId: string, userData: UpdateUserInput, file?: Express.Multer.File) => {
-    const user = await userRepository.findMe(userId)
+    const user = await userRepository.findById(userId)
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!")
 
     const validatedData = updateUserSchema.parse(userData)
@@ -102,8 +104,20 @@ export const userService = {
     }
   },
 
+  changePassword: async (userId: string, data: unknown) => {
+    const { code, newPassword } = changePasswordSchema.parse(data)
+
+    const user = await userRepository.findById(userId)
+    if (!user) throw new HttpError(404, "Usuário não encontrado.")
+
+    await otpService.validate(userId, code)
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+    await userRepository.update(userId, { password: hashedPassword })
+  },
+
   delete: async (userId: string) => {
-    const user = await userRepository.findMe(userId)
+    const user = await userRepository.findById(userId)
     if (!user) throw new HttpError(404, "Nenhum usuário encontrado!")
 
     const deletedUser = await userRepository.delete(userId)

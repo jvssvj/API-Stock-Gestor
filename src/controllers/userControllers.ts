@@ -13,7 +13,7 @@ export const userControllers = {
 
   findMe: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await userService.findMe(req.userId)
+      const user = await userService.findById(req.userId)
       return res.status(200).json({ message: "Usuário encontrado!", data: user })
     } catch (error) {
       next(error)
@@ -24,6 +24,15 @@ export const userControllers = {
     try {
       const updatedUser = await userService.update(req.userId, req.body, req.file)
       return res.status(200).json({ message: "Usuário atualizado com sucesso!", data: updatedUser })
+    } catch (error) {
+      next(error)
+    }
+  },
+
+  changePassword: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await userService.changePassword(req.userId, req.body)
+      return res.status(200).json({ message: "Senha alterada com sucesso." })
     } catch (error) {
       next(error)
     }

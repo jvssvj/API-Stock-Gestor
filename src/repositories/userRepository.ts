@@ -18,7 +18,7 @@ export const userRepository = {
     })
   },
 
-  findMe: async (id: string) => {
+  findById: async (id: string) => {
     return prisma.user.findUnique({
       where: { id },
       select: {
