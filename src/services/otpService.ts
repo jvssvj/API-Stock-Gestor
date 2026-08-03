@@ -47,4 +47,17 @@ export const otpService = {
             data: { used: true },
         })
     },
+
+    validateOnly: async (userId: string, code: string) => {
+        const otp = await prisma.otpCode.findFirst({
+            where: {
+                userId,
+                code,
+                used: false,
+                expiresAt: { gt: new Date() },
+            },
+        })
+
+        if (!otp) throw new HttpError(400, "Código inválido ou expirado.")
+    },
 }

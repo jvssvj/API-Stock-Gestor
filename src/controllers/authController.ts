@@ -37,4 +37,13 @@ export const authControllers = {
       next(error)
     }
   },
+
+  verifyOtp: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await authService.verifyOtp(req.body)
+      return res.status(200).json({ message: "Código válido." })
+    } catch (error) {
+      next(error)
+    }
+  },
 }

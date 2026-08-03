@@ -13,5 +13,6 @@ authRoutes.post("/auth/request-otp", authMiddleware, authControllers.requestOtp)
 // Usuário SEM LOGIN — esqueci minha senha
 authRoutes.post("/auth/forgot-password", authRateLimiter, authControllers.forgotPassword)
 authRoutes.post("/auth/reset-password", authControllers.resetPassword)
+authRoutes.post("/auth/verify-otp", authControllers.verifyOtp)
 
 export default authRoutes

@@ -1,5 +1,5 @@
 import { prisma } from "../database"
-import { loginSchema, forgotPasswordSchema, resetPasswordSchema } from "../schemas/authSchema"
+import { loginSchema, forgotPasswordSchema, resetPasswordSchema, verifyOtpSchema } from "../schemas/authSchema"
 import { HttpError } from "../errors/HttpError"
 import { otpService } from "./otpService"
 import * as bcrypt from "bcrypt"
@@ -69,5 +69,14 @@ export const authService = {
       where: { id: user.id },
       data: { password: hashedPassword },
     })
+  },
+
+  verifyOtp: async (data: unknown) => {
+    const { email, code } = verifyOtpSchema.parse(data)
+
+    const user = await prisma.user.findUnique({ where: { email } })
+    if (!user) throw new HttpError(400, "Código inválido ou expirado.")
+
+    await otpService.validateOnly(user.id, code)
   },
 }
