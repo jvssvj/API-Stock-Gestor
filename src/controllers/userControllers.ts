@@ -11,7 +11,7 @@ export const userControllers = {
     }
   },
 
-  findMe: async (req: Request, res: Response, next: NextFunction) => {
+  findById: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await userService.findById(req.userId)
       return res.status(200).json({ message: "Usuário encontrado!", data: user })

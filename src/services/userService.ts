@@ -62,6 +62,8 @@ export const userService = {
       }
     }
 
+    const shouldRemoveImage = userData.removeImage === "true"
+
     let avatarUrl = user.avatarUrl
     let avatarPublicId = user.avatarPublicId
     let newAvatarPublicId: string | null = null
@@ -72,6 +74,10 @@ export const userService = {
       avatarUrl = uploadResult.url
       avatarPublicId = uploadResult.publicId
       newAvatarPublicId = uploadResult.publicId
+    } else if (shouldRemoveImage && user.avatarPublicId) {
+      await cloudinaryService.delete(user.avatarPublicId)
+      avatarUrl = null
+      avatarPublicId = null
     }
 
     const data: any = {
@@ -87,6 +93,7 @@ export const userService = {
     }
 
     delete (data as any).removePhone
+    delete (data as any).removeImage
 
     try {
       const updatedUser = await userRepository.update(userId, data)
