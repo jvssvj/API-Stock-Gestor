@@ -16,7 +16,7 @@ export const resetPasswordSchema = z.object({
 })
 
 export const changePasswordSchema = z.object({
-  code: z.string().length(6, "O código deve ter 6 dígitos."),
+  otpCode: z.string().length(6, "O código deve ter 6 dígitos."),
   newPassword: z.string().min(6, "A senha deve ter no mínimo 6 caracteres."),
 })
 

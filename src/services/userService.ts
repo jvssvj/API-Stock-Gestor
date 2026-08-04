@@ -62,6 +62,17 @@ export const userService = {
       }
     }
 
+    if (validatedData.email && validatedData.email !== user.email) {
+      if (!userData.otpCode) {
+        throw new ZodError([{
+          code: "custom",
+          path: ["otpCode"],
+          message: "Código de verificação obrigatório para alterar o e-mail."
+        }])
+      }
+      await otpService.validate(userId, userData.otpCode)
+    }
+
     const shouldRemoveImage = userData.removeImage === "true"
 
     let avatarUrl = user.avatarUrl
@@ -94,6 +105,7 @@ export const userService = {
 
     delete (data as any).removePhone
     delete (data as any).removeImage
+    delete (data as any).otpCode
 
     try {
       const updatedUser = await userRepository.update(userId, data)
@@ -112,12 +124,12 @@ export const userService = {
   },
 
   changePassword: async (userId: string, data: unknown) => {
-    const { code, newPassword } = changePasswordSchema.parse(data)
+    const { otpCode, newPassword } = changePasswordSchema.parse(data)
 
     const user = await userRepository.findById(userId)
     if (!user) throw new HttpError(404, "Usuário não encontrado.")
 
-    await otpService.validate(userId, code)
+    await otpService.validate(userId, otpCode)
 
     const hashedPassword = await bcrypt.hash(newPassword, 10)
     await userRepository.update(userId, { password: hashedPassword })
