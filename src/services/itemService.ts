@@ -60,6 +60,7 @@ const itemService = {
 
     const data = {
       ...rest,
+      description: rest.description?.trim() || null,
       stock: { connect: { id: stock.id } },
       ...(categoryId && { category: { connect: { id: categoryId } } }),
       imageUrl,
@@ -198,6 +199,9 @@ const itemService = {
           where: { id: itemId },
           data: {
             ...updates,
+            ...(updates.description !== undefined && {
+              description: updates.description?.trim() || null
+            }),
             imageUrl,
             imagePublicId,
             category: categoryId
