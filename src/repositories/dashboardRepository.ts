@@ -90,13 +90,15 @@ export const dashboardRepository = {
                     { description: "" },
                     { imageUrl: null },
                     { categoryId: null },
-                    { priceInCents: 0 }
+                    { priceInCents: 0 },
+                    { quantity: 0 }
                 ]
             },
             orderBy: { updatedAt: 'desc' },
             select: {
                 id: true,
                 name: true,
+                quantity: true,
                 description: true,
                 sku: true,
                 imageUrl: true,

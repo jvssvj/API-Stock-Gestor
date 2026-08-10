@@ -12,7 +12,7 @@ export const createItemSchema = z.object({
     .min(0, "Quantidade não pode ser negativa"),
   priceInCents: z.coerce
     .number("Formato inválido. Precisa ser um número!")
-    .min(1, "O preço não pode ser negativo!"),
+    .min(0, "O preço não pode ser negativo!"),
   categoryId: z
     .string()
     .optional(),
