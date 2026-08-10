@@ -28,6 +28,7 @@ export const dashboardService = {
 
             const fieldLabels: Record<string, string> = {
                 imageUrl: "image",
+                quantity: "quantity",
                 categoryId: "category",
                 priceInCents: "price",
                 description: "description",
@@ -46,7 +47,8 @@ export const dashboardService = {
                     value === null ||                  // O campo está nulo no banco
                     value === undefined ||             // O campo nem foi definido
                     (typeof value === 'string' && value.trim() === '') || // Texto vazio ou só espaços
-                    (key === 'priceInCents' && value === 0) // Preço está como zero (regra de negócio)
+                    (key === 'priceInCents' && value === 0) || // Preço está como zero (regra de negócio)
+                    (key === "quantity" && value === 0)
                 )
             }).map(key => fieldLabels[key] ?? key)
 
