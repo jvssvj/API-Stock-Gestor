@@ -26,6 +26,13 @@ export const dashboardService = {
             const blacklist = ['id', 'stockId', 'createdAt', 'updatedAt', 'imagePublicId']
             const allFields = Object.keys(item)
 
+            const fieldLabels: Record<string, string> = {
+                imageUrl: "image",
+                categoryId: "category",
+                priceInCents: "price",
+                description: "description",
+            }
+
             const missingFields = allFields.filter(key => {
                 if (blacklist.includes(key)) return false
 
@@ -41,7 +48,7 @@ export const dashboardService = {
                     (typeof value === 'string' && value.trim() === '') || // Texto vazio ou só espaços
                     (key === 'priceInCents' && value === 0) // Preço está como zero (regra de negócio)
                 )
-            })
+            }).map(key => fieldLabels[key] ?? key)
 
             return {
                 id: item.id,
