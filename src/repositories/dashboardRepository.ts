@@ -61,23 +61,22 @@ export const dashboardRepository = {
     },
 
     itemsByCategory: async (stockId: string) => {
-        return await prisma.category.findMany({
-            where: {
-                items: {
-                    some: { stockId }
-                }
-            },
+        return prisma.category.findMany({
+            where: { stockId },
             select: {
+                id: true,
                 name: true,
                 _count: {
                     select: {
                         items: {
-                            where: { stockId }
-                        }
-                    }
-                }
+                            where: { stockId },
+                        },
+                    },
+                },
             },
-            take: 5
+            orderBy: {
+                name: "asc",
+            },
         })
     },
 

@@ -17,7 +17,7 @@ export const dashboardService = {
             value: item._count.movements
         }))
 
-        const itemsByCategory = itemsByCategoryRaw.map((cat: any) => ({
+        const itemsByCategory = itemsByCategoryRaw.map((cat) => ({
             label: cat.name,
             value: cat._count.items
         }))
