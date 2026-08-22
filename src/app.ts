@@ -14,6 +14,10 @@ import { validateEnv } from './config/env';
 validateEnv()
 const app = express()
 
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() })
+})
+
 app.set("trust proxy", 1)
 app.use(securityHeadersMiddleware)
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN }))
