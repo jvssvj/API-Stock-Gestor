@@ -46,4 +46,13 @@ export const authControllers = {
       next(error)
     }
   },
+
+  verifyEmail: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.verifyEmail(req.body)
+      return res.status(200).json({ data: result })
+    } catch (error) {
+      next(error)
+    }
+  },
 }

@@ -19,6 +19,13 @@ export const authService = {
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if (!isPasswordValid) throw new HttpError(401, "E-mail ou senha inválidos")
 
+    // Bloqueia login se email não verificado
+    if (!user.emailVerified) {
+      // Reenvia OTP pra facilitar
+      await otpService.generate(user.id, user.email, user.firstName)
+      throw new HttpError(403, "E-mail não verificado. Reenviamos o código para o seu e-mail.")
+    }
+
     const secret = process.env.JWT_SECRET!
     const token = jwt.sign(
       { userId: user.id, firstName: user.firstName, lastName: user.lastName, stockId: user.stock?.id },
@@ -48,11 +55,8 @@ export const authService = {
 
   forgotPassword: async (data: unknown) => {
     const { email } = forgotPasswordSchema.parse(data)
-
     const user = await prisma.user.findUnique({ where: { email } })
-
     if (!user) return
-
     await otpService.generate(user.id, user.email, user.firstName)
   },
 
@@ -71,12 +75,48 @@ export const authService = {
     })
   },
 
+  // Verifica OTP sem consumi-lo (usado no forgot password step 2)
   verifyOtp: async (data: unknown) => {
     const { email, code } = verifyOtpSchema.parse(data)
-
     const user = await prisma.user.findUnique({ where: { email } })
     if (!user) throw new HttpError(400, "Código inválido ou expirado.")
-
     await otpService.validateOnly(user.id, code)
+  },
+
+  // Verifica email no registro (consome o OTP e marca emailVerified)
+  verifyEmail: async (data: unknown) => {
+    const { email, code } = verifyOtpSchema.parse(data)
+
+    const user = await prisma.user.findUnique({ where: { email }, include: { stock: true } })
+    if (!user) throw new HttpError(400, "Código inválido ou expirado.")
+
+    if (user.emailVerified) throw new HttpError(400, "E-mail já verificado.")
+
+    await otpService.validate(user.id, code)
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerified: true },
+    })
+
+    // Faz login automático após verificar
+    const secret = process.env.JWT_SECRET!
+    const token = jwt.sign(
+      { userId: user.id, firstName: user.firstName, lastName: user.lastName, stockId: user.stock?.id },
+      secret,
+      { expiresIn: "1d", algorithm: "HS256" }
+    )
+
+    return {
+      token,
+      user: {
+        userId: user.id,
+        avatarUrl: user.avatarUrl,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        stockId: user.stock?.id,
+      },
+    }
   },
 }

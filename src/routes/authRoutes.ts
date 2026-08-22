@@ -7,12 +7,15 @@ const authRoutes = Router()
 
 authRoutes.post("/login", authRateLimiter, authControllers.login)
 
-// Usuário LOGADO — solicita OTP para trocar a senha
+// Usuário LOGADO — solicita OTP para trocar senha
 authRoutes.post("/auth/request-otp", authMiddleware, authControllers.requestOtp)
 
-// Usuário SEM LOGIN — esqueci minha senha
+// Esqueci minha senha
 authRoutes.post("/auth/forgot-password", authRateLimiter, authControllers.forgotPassword)
 authRoutes.post("/auth/reset-password", authControllers.resetPassword)
 authRoutes.post("/auth/verify-otp", authControllers.verifyOtp)
+
+// Verificação de email no registro
+authRoutes.post("/auth/verify-email", authRateLimiter, authControllers.verifyEmail)
 
 export default authRoutes

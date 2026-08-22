@@ -40,7 +40,7 @@ export const updateUserSchema = z.object({
     .regex(/^\d{10,11}$/, "O telefone deve ter 10 ou 11 dígitos numéricos")
     .optional(),
   removeImage: z.string().optional(),
-  otpCode: z.string().optional()
+  otpCode: z.string().optional(),
 })
 
 

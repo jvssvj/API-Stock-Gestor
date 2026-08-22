@@ -13,26 +13,26 @@ export const userService = {
 
     const emailInUse = await userRepository.findByEmail(validatedData.email)
     if (emailInUse) {
-      throw new ZodError([
-        {
-          code: 'custom',
-          path: ['email'],
-          message: 'Este e-mail já está cadastrado.'
-        }
-      ])
+      throw new ZodError([{
+        code: 'custom',
+        path: ['email'],
+        message: 'Este e-mail já está cadastrado.'
+      }])
     }
 
     const hashedPassword = await bcrypt.hash(validatedData.password, 10)
 
-    const user = {
+    const user = await userRepository.create({
       ...validatedData,
       password: hashedPassword,
-      stock: {
-        create: {},
-      },
-    }
+      emailVerified: false,
+      stock: { create: {} },
+    })
 
-    return await userRepository.create(user)
+    // Envia OTP de verificação
+    await otpService.generate(user.id, user.email, user.firstName)
+
+    return { email: user.email }  // retorna só o email pro front redirecionar
   },
 
   findById: async (userId: string) => {
@@ -52,13 +52,11 @@ export const userService = {
       const conflict = await userRepository.findConflict(userId, validatedData.email, validatedData.phone)
       if (conflict) {
         const field = conflict.email === validatedData.email ? "email" : "phone"
-        throw new ZodError([
-          {
-            code: "custom",
-            path: [field],
-            message: `${field === "email" ? "E-mail" : "Telefone"} já está sendo usado por outro usuário.`
-          }
-        ])
+        throw new ZodError([{
+          code: "custom",
+          path: [field],
+          message: `${field === "email" ? "E-mail" : "Telefone"} já está sendo usado por outro usuário.`
+        }])
       }
     }
 

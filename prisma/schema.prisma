@@ -19,6 +19,7 @@ model User {
   lastName       String
   stock          Stock?
   otpCodes       OtpCode[]
+  emailVerified  Boolean   @default(false)
 }
 
 model OtpCode {
