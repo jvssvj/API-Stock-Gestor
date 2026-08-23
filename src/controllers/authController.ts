@@ -55,4 +55,22 @@ export const authControllers = {
       next(error)
     }
   },
+
+  requestEmailChangeOtp: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.requestEmailChangeOtp(req.userId, req.body)
+      return res.status(200).json({ message: "Códigos enviados.", data: result })
+    } catch (error) {
+      next(error)
+    }
+  },
+
+  confirmEmailChange: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await authService.confirmEmailChange(req.userId, req.body)
+      return res.status(200).json({ data: result })
+    } catch (error) {
+      next(error)
+    }
+  },
 }

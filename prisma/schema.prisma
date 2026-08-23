@@ -31,6 +31,14 @@ model OtpCode {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model EmailOtpCode {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+}
+
 model Stock {
   id         String     @id @default(uuid())
   userId     String     @unique
