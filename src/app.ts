@@ -10,6 +10,7 @@ import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware";
 import { securityHeadersMiddleware } from './middlewares/securityHeadersMiddleware';
 import { generalRateLimiter } from './middlewares/rateLimitMiddleware';
 import { validateEnv } from './config/env';
+import keepAliveRoutes from './routes/keepAlive';
 
 validateEnv()
 const app = express()
@@ -23,6 +24,7 @@ app.use(securityHeadersMiddleware)
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN }))
 app.use(generalRateLimiter)
 app.use(express.json({ limit: "1mb" }))
+app.use("/api", keepAliveRoutes)
 app.use("/api", authRoutes)
 app.use("/api", userRoutes)
 app.use("/api", itemRoutes)
